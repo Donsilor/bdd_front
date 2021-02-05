@@ -1,0 +1,6769 @@
+<template>
+  <div>
+    <!-- 中文简体 -->
+    <div v-if="language === 'zh_CN'" class="order">
+      <!-- 步骤模块 -->
+      <div class="order-step">
+        <div class="one-step">
+          <div class="step-img">
+            <img src="../../../static/order/step.png" alt="" />
+            <span>1</span>
+          </div>
+          <div class="step-arrow">
+            <img src="../../../static/order/arrow.png" alt="" />
+          </div>
+          <div class="step-title">{{ $t(`${lang}.ConfirmOrder`) }}</div>
+          <div class="step-desc">{{ $t(`${lang}.finishOrder`) }}</div>
+        </div>
+        <div class="one-step">
+          <div class="step-img">
+            <span>2</span>
+          </div>
+          <div class="step-arrow" />
+          <div class="step-title">{{ $t(`${lang}.orderPay`) }}</div>
+          <div class="step-desc" />
+        </div>
+        <div class="one-step">
+          <div class="step-img">
+            <span>3</span>
+          </div>
+          <div class="step-arrow" />
+          <div class="step-title">{{ $t(`${lang}.finishPay`) }}</div>
+          <div class="step-desc" />
+        </div>
+        <div class="step-line" />
+      </div>
+
+      <!-- 用户名称和提示登陆 -->
+      <div class="user-info">
+        <i class="iconfont iconrentou" />
+        <div class="login-line">
+          <span @click="login()">{{ $t(`${lang}.login`) }}</span>
+          <span>{{ $t(`${lang}.balbala`) }}</span>
+          <span @click="register()">{{ $t(`${lang}.Registration`) }}</span>
+          <span>{{ $t(`${lang}.balabalabala`) }}</span>
+        </div>
+      </div>
+
+      <div v-if="showAddress" class="address">
+        <!-- 地址列表模块 -->
+        <div
+          v-show="address.length !== 0"
+          :style="{
+            height: addressMore
+              ? `${270 * Math.ceil(address.length / 2)}px`
+              : '250px'
+          }"
+          class="address-box"
+        >
+          <div class="addr-blocks">
+            <div
+              v-for="(a, index) in address"
+              :key="index"
+              :class="{ 'addr-active': addressIdx == index }"
+              class="addr-block"
+            >
+              <div class="addr-user">{{ a.lastname }}{{ a.firstname }}</div>
+              <div class="addr-user-phone">
+                <div>{{ a.mobile_code }}</div>
+                <div>{{ a.mobile }}</div>
+              </div>
+              <div class="addr-user-email">{{ a.email }}</div>
+              <div class="addr-address">
+                <div>{{ a.country_name }} {{ a.province_name }} {{ a.city_name }}</div>
+                <div>{{ a.address_details }}</div>
+              </div>
+              
+              <div>{{ a.zip_code }}</div>
+              <div class="addr-board" @click="changeAddress(index)" />
+              <span class="ifChoose" :class="{'on': addressIdx == index}"></span>
+              <i
+                class="iconfont iconlajitong"
+                @click="
+                  deleteAddressId = a.id
+                  delIdx = index
+                  confirmBox = true
+                "
+              />
+              <!-- <div
+                v-if="a.is_default == 1"
+                class="font-size-14 mrAdd"
+                style="color: #f29b87; margin-top: 6px;"
+              >
+                {{ $t(`${langs}.mrAddress`) }}
+              </div> -->
+              <!-- <div
+                v-if="a.is_default != 1 && addressIdx == index"
+                class="font-size-14 mrAdd"
+                style="color: #f29b87; margin-top: 6px;"
+                @click="setDefaultAddr(a)"
+              >
+                {{ $t(`${lang}.setDefaultAddr`) }}
+              </div> -->
+              <div
+                class="addr-btn"
+                @click="
+                  newAddress = true
+                  changeAddressInfo(a)
+                "
+              >
+                {{ $t(`${lang}.change`) }}
+              </div>
+              <img src="../../../static/personal/account/address-bar.png" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 新增&修改地址模块 -->
+        <div  v-show="addAddress" :style="[{ height: newAddress ? '360px' : '0px' },{ padding: newAddress ? '20px 51px 0 36px' : '0' }]" class="new-address" id="addbox">
+          <div class="new-address-title">
+            <div class="na-line" />
+            <div class="na-title">{{ $t(`${lang}.address`) }}</div>
+            <div class="na-little-word">{{ $t(`${lang}.mustInput`) }}</div>
+          </div>
+          <div class="new-address-input">
+            <!-- 左边输入框 -->
+            <div class="left-side">
+              <!-- 姓名 -->
+              <div class="input-line">
+                <div class="label"><span class="star">*</span>{{ $t(`${lang}.firstName`) }}</div>
+                <div :class="[ { 'border-change': borderChange === 1 }, { 'border-wrong': wrongInput.lastname }]" class="input-box">
+                  <input v-model="addressData.lastname" :class="{ 'wrong-input': wrongInput.lastname }" type="text" autocomplete="off"
+                    @focus="
+                      borderChange = 1
+                      wrongInput.lastname = false
+                    "
+                    @blur="borderChange = 0"
+                    maxlength="30"
+                  />
+                  <div v-show="wrongInput.lastname" class="wrong-alert">
+                    {{ $t(`${lang}.wrongInput`) }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- 姓名 -->
+              <div class="input-line">
+                <div class="label"><span class="star">*</span>{{ $t(`${lang}.lastName`) }}</div>
+                <div :class="[ { 'border-change': borderChange === 2 }, { 'border-wrong': wrongInput.firstname } ]" class="input-box">
+                  <input
+                    v-model="addressData.firstname"
+                    :class="{ 'wrong-input': wrongInput.firstname }"
+                    type="text"
+                    autocomplete="off"
+                    @focus="
+                      borderChange = 2
+                      wrongInput.firstname = false
+                    "
+                    @blur="borderChange = 0"
+                    maxlength="30"
+                  />
+                  <div v-show="wrongInput.firstname" class="wrong-alert">
+                    {{ $t(`${lang}.wrongInput`) }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- 电话 -->
+              <div class="input-line">
+                <div class="label"><span class="star">*</span>{{ $t(`${lang}.telephone`) }}</div>
+                <div class="tel-special">
+                  <div class="tel-area">
+                    <input :value="phoneNum.phone_code" type="text" autocomplete="off" />
+                    <select v-model="phoneNum">
+                      <option
+                        v-for="(p, index) in phoneJson"
+                        :key="index"
+                        :value="p"
+                        >{{ psn ? p.en :psn ? p.cn :p.zh }}</option
+                      >
+                    </select>
+                    <i class="iconfont iconxiala" />
+                  </div>
+                  <div
+                    :class="[
+                      { 'border-change': borderChange === 3 },
+                      { 'border-wrong': wrongInput.mobile }
+                    ]"
+                    class="input-box tel"
+                  >
+                    <input
+                      v-model="addressData.mobile"
+                      :class="{ 'wrong-input': wrongInput.mobile }"
+                      type="text"
+                      autocomplete="off"
+                      @focus="
+                        borderChange = 3
+                        wrongInput.mobile = false
+                      "
+                      @blur="borderChange = 0"
+                      :maxlength="mobileMax"
+                      @input="mobileIpt"
+                    />
+                    <div v-show="wrongInput.mobile" class="wrong-alert">
+                      {{ $t(`${lang}.wrongInput`) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 邮箱 -->
+              <div class="input-line">
+                <div class="label">{{ $t(`${lang}.email`) }}</div>
+                <div :class="[ { 'border-change': borderChange === 4 }, { 'border-wrong': wrongInput.email }]" class="input-box">
+                  <input
+                    v-model="addressData.email"
+                    type="text"
+                    autocomplete="off"
+                    @focus="
+                      borderChange = 4
+                    "
+                    @blur="borderChange = 0"
+                    maxlength="60"
+                  />
+                  <!-- <div v-show="wrongInput.email" class="wrong-alert">
+                    {{ $t(`${lang}.wrongInput`) }}
+                  </div> -->
+                </div>
+              </div>
+
+              <!-- 确认邮箱 -->
+              <!-- <div class="input-line">
+                <div class="label">*{{ $t(`${lang}.checkEmail`) }}</div>
+                <div
+                  :class="[
+                    { 'border-change': borderChange === 5 },
+                    { 'border-wrong': wrongInput.checkEmail }
+                  ]"
+                  class="input-box"
+                >
+                  <input
+                    v-model="addressData.checkEmail"
+                    :class="{ 'wrong-input': wrongInput.checkEmail }"
+                    type="text"
+                    @focus="
+                      borderChange = 5
+                      wrongInput.checkEmail = false
+                    "
+                    @blur="borderChange = 0"
+                  />
+                  <div v-show="wrongInput.checkEmail" class="wrong-alert">
+                    {{ $t(`${lang}.wrongInputAgain`) }}
+                  </div>
+                </div>
+              </div> -->
+            </div>
+
+            <!-- 右边输入框 -->
+            <div class="right-side">
+              <!-- 国家 -->
+              <div class="input-line">
+                <div class="label"><span class="star">*</span>{{ $t(`${lang}.country`) }}</div>
+                <div class="input-box">
+                  <input :value="country.areaName" type="address" autocomplete="off" />
+                  <select  v-model="country" @change="getListTwo()">
+                    <option
+                      v-for="(c, index) in countryList" 
+                      :key="index"
+                      :value="c"
+                      >{{ c.areaName }}</option
+                    >
+                  </select>
+                  <i class="iconfont iconxiala" />
+                </div>
+              </div>
+
+              <!-- 省份 -->
+              <div class="input-line">
+                <div class="label">{{ $t(`${lang}.province`) }}</div>
+                <div class="input-box">
+                  <input :value="province.areaName" type="address" autocomplete="off" />
+                  <select v-model="province" @change="getListThree()">
+                    <option
+                      v-for="(p, index) in provinceList"
+                      :key="index"
+                      :value="p"
+                      >{{ p.areaName }}</option
+                    >
+                  </select>
+                  <i class="iconfont iconxiala" />
+                </div>
+              </div>
+
+              <!-- 城市 -->
+              <div class="input-line">
+                <div class="label">{{ $t(`${lang}.city`) }}</div>
+                <div class="input-box">
+                  <input :value="city.areaName" type="address" autocomplete="off" />
+                  <select v-model="city">
+                    <option
+                      v-for="(c, index) in cityList"
+                      :key="index"
+                      :value="c"
+                      >{{ c.areaName }}</option
+                    >
+                  </select>
+                  <i class="iconfont iconxiala" />
+                </div>
+              </div>
+
+              <!-- 详细地址 -->
+              <div class="input-line">
+                <div class="label"><span class="star">*</span>{{ $t(`${lang}.longAddress`) }}</div>
+                <div :class="[{ 'border-change': borderChange === 6 },{ 'border-wrong': wrongInput.address_details }]"class="input-box">
+                  <textarea
+                    v-model="addressData.address_details"
+                    :class="{ 'wrong-input': wrongInput.address_details }"
+                    autocomplete="off"
+                    @focus="
+                      borderChange = 6
+                      wrongInput.address_details = false
+                    "
+                    @blur="borderChange = 0"
+                    maxlength="300"
+                  />
+                  <div v-show="wrongInput.address_details" class="wrong-alert">
+                    {{ $t(`${lang}.wrongInput`) }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- 邮编 -->
+              <div class="input-line">
+                <div class="label">{{ $t(`${lang}.zipCode`) }}</div>
+                <div :class="[ { 'border-change': borderChange === 7 },{ 'border-wrong': wrongInput.zip_code }]" class="input-box">
+                  <input
+                    v-model="addressData.zip_code"
+                    :class="{ 'wrong-input': wrongInput.zip_code }"
+                    type="text"
+                    autocomplete="off"
+                    maxlength="11"
+                    @focus="
+                      borderChange = 7
+                      wrongInput.zip_code = false
+                    "
+                    @blur="borderChange = 0"
+                    @input="keydown"
+                  />
+                  <div v-show="wrongInput.zip_code" class="wrong-alert">
+                    {{ $t(`${lang}.wrongInput`) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="new-address-btn" @click="isEdit ? saveAddressCn() : createAddressCn()">
+            {{ $t(`${lang}.sure`)}}
+            <span v-show="!isEdit">{{ $t(`${lang}.add`) }}</span>
+            <span v-show="isEdit">{{ $t(`${lang}.edit`) }}</span>
+          </div>
+          <div v-show="noWay" class="close-new-address-btn" @click="newAddress = false;resetAddressInp()">
+            {{ $t(`${lang}.seeLess`) }}
+          </div>
+        </div>
+
+        <!-- 购物车模块 -->
+        <div class="cart-top-bar">
+          <span>{{ $t(`${lang}.info`) }}</span
+          ><span>{{ $t(`${lang}.number`) }}</span
+          ><span>{{ $t(`${lang}.oldPrice`) }}</span
+          ><span>{{ $t(`${lang}.newPrice`) }}</span>
+        </div>
+        <div class="cart-goods">
+          <div v-for="(g, index) in good" :key="index">
+            <div v-if="g.groupType === null && g.data[0].goodsType !== '19'" class="finished">
+              <div class="cart-radio"></div>
+              <single :g="g" :options="false"></single>
+            </div>
+            <div v-if="g.data[0].goodsType == '19'" class="couple">
+              <div class="cart-radio"></div>
+              <double :g="g" :options="false"></double>
+            </div>
+            <div v-if="g.groupType === 2" class="customization">
+              <div class="cart-radio"></div>
+              <madeUp
+                :g="g"
+                :options="false"
+                :word="$t(`cart.customMade`)"
+              ></madeUp>
+            </div>
+          </div>
+        </div>
+
+        <!-- 订单信息模块 -->
+        <div class="order-info">
+          <div class="left-info">
+            <div class="new-address-title">
+              <div class="na-line" />
+              <div class="na-title">{{ $t(`${lang}.deliveryInformation`) }}</div>
+            </div>
+            <!-- <div v-if="good.length > 1" class="is-pack">
+              <div
+                v-show="!isAllPack"
+                class="free-check"
+                @click="isAllPack = !isAllPack"
+              />
+              <i
+                v-show="isAllPack"
+                class="iconfont icongou"
+                @click="isAllPack = !isAllPack"
+              />
+              <div>
+                <span>{{ $t(`${lang}.sendTogether`) }}</span
+                ><span>（{{ $t(`${lang}.chatBor`) }}）</span>
+              </div>
+            </div> -->
+            <div class="send-time">
+              <div class="send-left">
+                <div>{{ $t(`${lang}.sendTime`) }}</div>
+                <div>
+                  <router-link to="/deliveryPolicy">{{
+                    $t(`${lang}.checkDeliveryPolicy`)
+                  }}</router-link>
+                </div>
+              </div>
+              <div class="send-right">
+                {{ tex.plan_days }}{{ $t(`${lang}.goSingKei`) }}
+              </div>
+            </div>
+            <!-- <div class="after-sale-email">
+              <div>{{ $t(`${lang}.showHouEmail`) }}</div>
+              <div>
+                <div
+                  v-show="!isSameEmail"
+                  class="free-check"
+                  @click="isSameEmail = !isSameEmail"
+                />
+                <i
+                  v-show="isSameEmail"
+                  class="iconfont icongou"
+                  @click="isSameEmail = !isSameEmail"
+                />
+                <span>{{ $t(`${lang}.sameTongAddress`) }}</span>
+              </div>
+            </div> -->
+            <!-- <div
+              :class="[
+                { 'border-change': borderChange === 8 },
+                { 'border-wrong': wrongInput.odMail }
+              ]"
+              class="after-sale-email-input"
+            >
+              <input
+                v-show="!isSameEmail"
+                v-model="orderEmail"
+                :class="{ 'wrong-input': wrongInput.odMail }"
+                type="text"
+                @focus="
+                  borderChange = 8
+                  wrongInput.odMail = false
+                "
+                @blur="borderChange = 0"
+              />
+              <input
+                v-show="isSameEmail"
+                v-model="addressData.userMail"
+                :class="{ 'wrong-input': wrongInput.odMail }"
+                type="text"
+                @focus="
+                  borderChange = 8
+                  wrongInput.odMail = false
+                "
+                @blur="borderChange = 0"
+              />
+            </div> -->
+            <div class="message">
+              <div class="message-title">{{ $t(`${lang}.remark`) }}</div>
+              <textarea
+                maxlength="500"
+                v-model="remark"
+                :class="[
+                  { 'border-change': borderChange === 9 },
+                  { 'wrong-input': wrongInput.remark },
+                  { 'border-wrong': wrongInput.remark }
+                ]"
+                @focus="
+                  borderChange = 9
+                  wrongInput.remark = false
+                "
+                @blur="borderChange = 0"
+              />
+              <span class="tex-count" :class="{'color-red':remark.length == 500}">{{texsum}}/500</span>
+            </div>
+
+            <!-- 发票按钮 -->
+            <div class="invoice">
+
+              <div class="invoice-btn" v-if="this.areaId == '1'">
+                <div v-show="!iconShow" @click="show2">
+                  <img style="width:30px;height:30px" src="../../../static/order/untick.png" alt="">
+                  <span>{{ $t(`${lang3}.default`) }}</span>
+                </div>
+                <div v-show="iconShow" @click="show2">
+                  <img style="width:30px;height:30px" src="../../../static/order/ticks.png" alt="">
+                  <span>{{ $t(`${lang3}.Invoicing`) }}</span>
+                </div>
+              </div>
+              <div class="invoice-box" v-show="invoiceBox">
+                <div class="msg">
+                  <div class="msgbox" v-show="content">
+                    <div @click="close" class="cha"><i class="el-icon-circle-close "></i></div>
+
+                    <p class="title">{{ $t(`${lang3}.Invoicings`) }}</p>
+                    <div class="btn_type">
+                      <button @click="zhizhi(0)" :class="{active:isactive}">{{ $t(`${lang3}.PaperInvoice`) }}</button>
+                      <button @click="dianzi(1)" :class="{active:Active}">{{ $t(`${lang3}.ElectronicInvoice`) }}</button>
+                    </div>
+                    <!-- 纸质 -->
+                    <div class="input-line" >
+                      <div class="label"><span class="star"></span>{{ $t(`${lang3}.InvoiceType`) }}</div>
+                      <div class="input-box" v-show="isactive == true">
+                        <input
+                          style="text-align:center;"
+                          disabled
+                          v-model="aa"
+                          readonly
+                          :class="{ 'wrong-input': wrongInput.lastname }"
+                          type="text"
+                        />
+                      </div>
+                      <div class="input-box" v-show="Active == true">
+                        <input
+                          style="text-align:center;"
+                          disabled
+                          v-model="bb"
+                          readonly
+                          :class="{ 'wrong-input': wrongInput.lastname }"
+                          type="text"
+                        />
+                      </div>
+                    </div>
+                    <!-- 电子 -->
+                    <!-- <div class="input-line" >
+                      <div class="label"><span class="star"></span>{{ $t(`${lang3}.InvoiceType`) }}</div>
+                      <div class="input-box">
+                        <input
+                          style="text-align:center;"
+                          disabled
+                          v-model="bb"
+                          readonly
+                          :class="{ 'wrong-input': wrongInput.lastname }"
+                          type="text"
+                        />
+                      </div>
+                    </div> -->
+                    <div class="base-info-line">
+                      <div class="base-info-line-title"><span class="star">*</span>{{ $t(`${lang3}.HeaderType`) }}</div>
+                      <div class="base-info-line-content marriage-choose" >
+                        <el-radio-group v-model="invoice.invoice_type" @change="handle">
+                          <el-radio :label="2">{{ $t(`${lang3}.UnBusinessUnit`) }}</el-radio>
+                          <el-radio :label="1">{{ $t(`${lang3}.BusinessUnit`) }}</el-radio>
+                        </el-radio-group>
+                        <div v-show="redioShow" class="emplty">
+                          {{ $t(`${lang3}.hint1`) }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 发票抬头 -->
+                    <div class="input-line">
+                      <div class="label"><span class="star">*</span>{{ $t(`${lang3}.Invoice`) }}</div>
+                      <div
+                        :class="[
+                          { 'border-change': borderChange === 2 },
+                          { 'border-wrong': typeShow }
+                        ]"
+                        class="input-box"
+                      >
+                        <input
+                          v-model="invoice.invoice_title"
+                          :class="{ 'wrong-input': typeShow }"
+                          type="text"
+                          @focus="
+                            borderChange = 2
+                            typeShow = false
+                          "
+                          @blur="borderChange = 0"
+                        />
+                      </div>
+                    </div>
+                    <div v-show="typeShow" class="empltyErr">
+                      {{ $t(`${lang3}.hint2`) }}
+                    </div>
+                    <!-- 发票税号 -->
+                    <div class="input-line">
+                      <div class="label"><span v-if="invoice.invoice_type==1" class="star">*</span>{{ $t(`${lang3}.TaxID`) }}</div>
+                      <div
+                        :class="[
+                          { 'border-change': borderChange === 3 },
+                          { 'border-wrong': taxShow }
+                        ]"
+                        class="input-box"
+                      >
+                        <input
+                          v-model="invoice.tax_number"
+                          :class="{ 'wrong-input': taxShow }"
+                          type="text"
+                          @focus="
+                            borderChange = 3
+                          taxShow = false
+                          "
+                          @blur="borderChange = 0"
+                        />
+                      </div>
+                    </div>
+                    <div v-show="taxShow" class="empltyErr">
+                      {{ $t(`${lang3}.hint3`) }}
+                    </div>
+                    <!-- 邮箱 -->
+                    <div class="email-box">
+                      <div class="input-line" v-show="Active == true">
+                        <div class="label"><span class="star">*</span>{{ $t(`${lang3}.email`) }}</div>
+                        <div
+                          :class="[
+                            { 'border-change': borderChange === 1 },
+                            { 'border-wrong': mailShow }
+                          ]"
+                          class="input-box"
+                        >
+                          <input
+                            v-model="invoice.email"
+                            :class="{ 'wrong-input': mailShow }"
+                            type="text"
+                            @focus="
+                              borderChange = 1
+                              mailShow = false
+                            "
+                            @blur="borderChange = 0"
+                          />
+                        </div>
+                      </div>
+                      <!-- <div v-show="emailShow" class="empltyErr">
+                        {{ $t(`${lang3}.hint4`) }}
+                      </div> -->
+                      <div v-show="mailShow" class="empltyErr">
+                        {{ $t(`${lang3}.hint5`) }}
+                      </div>
+                    </div>
+                    <div class="total">
+                      <div class="label"><span class="star"></span>{{ $t(`${lang3}.totalAmount`) }}</div>
+                      <div class="totle-price">
+                        <span>{{ formatCoin(tex.coinType) }} {{ formatMoney(ultimatelyPay) }}</span>
+                      </div>
+                    </div>
+                    <p class="tips">{{ $t(`${lang3}.tips`) }}</p>
+                    <div class="btn">
+                      <button @click="confirm">{{ $t(`${lang3}.confirm`) }}</button>
+                    </div>
+                  </div>
+                  <div class="msgbox" v-show="gou">
+                    <div class="gou-img">
+                      <img src="../../../static/order/ticks.png" alt="">
+                      <p>{{ $t(`${lang3}.Submitted`) }}</p>
+                    </div>
+                    <!-- <div class="btn"> Submitted
+                      <button @click="complete">{{ $t(`${lang3}.carryOut`) }}</button>
+                    </div> -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="right-info">
+            <!-- 优惠卷 -->
+            <!-- <div v-show="!makeGay" class="coupon">
+              <div class="two-on-one">
+                <input
+                  ref="too"
+                  v-model="tooInp"
+                  :placeholder="$t(`${lang}.tooInpShort`)"
+                  type="text"
+                  class="too-input"
+                  @focus="die = false"
+                  @input="fuckYouM"
+                />
+              </div>
+              <div
+                :style="[
+                  { backgroundColor: fuckYou ? 'rgba(170,138,123,1)' : '#eee' }
+                ]"
+                class="too-btn"
+                @click="checkCount"
+              >
+                {{ $t(`${lang}.exchange`) }}
+              </div>
+              <div v-show="die" class="too-die">{{ familyDie }}</div>
+              <div class="too-wenhao">
+                ?
+                <div class="too-gay">
+                  <div>{{ $t(`${lang}.gay1`) }}</div>
+                  <div>{{ $t(`${lang}.gay2`) }}</div>
+                  <div>{{ $t(`${lang}.gay3`) }}</div>
+                </div>
+              </div>
+            </div> -->
+            <div class="new-address-title" style="width: auto;position: relative;">
+              <div class="na-line" />
+              <div class="na-title">{{ $t(`${lang}.kouMaiInfo`) }}</div>
+              <div class="add-shopping-card" v-if="this.$store.state.platform !== 30" @click="login()">+{{ $t(`${lang}.useShoppingCard`) }}</div>
+            </div>
+            <div class="price-detail">
+              <div class="detail-line">
+                <div>{{ $t(`${lang}.goodsNum`) }}</div>
+                <div class="hkd">{{ good.length }}</div>
+              </div>
+
+              <div class="detail-line">
+                <div>{{ $t(`${lang}.goodsNumNum`) }}</div>
+                <div class="hkd">
+                  {{ formatCoin(tex.coinType) }} {{ formatMoney(goodsPrice) }}
+                </div>
+              </div>
+
+              <!-- 优惠券 -->
+              <div v-show="objectIfEmpty(tex.coupons) && isLogin" class="detail-line">
+                <div>{{ $t(`${lang}.coupon`) }}</div>
+                <div class="hkd color-pink" style="cursor: pointer;" :class="{'under-line': 1}" @click="showUseCoupons">
+                  <!-- <div v-if="couponCodeR.couponId">- {{$store.state.coin}} {{ formatMoney(couponCodeR.couponCode) }}</div> -->
+                  <div>{{$t(`${lang}.notAvailable`)}}</div>
+                </div>
+              </div>
+
+              
+
+              <!-- <div v-show="makeGay" class="detail-line">
+                <div>
+                  *{{ $t(`${lang}.coupon`) }}:
+                  <span style="color: red;">{{ tooInp }}</span>
+                  <span
+                    style="color: red;text-decoration: underline;cursor: pointer;"
+                    @click="removeCoupon"
+                    >{{ $t(`${lang}.sc`) }}</span
+                  >
+                </div>
+                <div class="hkd color-pink">
+                  -{{ formatCoin(tex.coinType) }} {{ formatMoney(preferFee) }}
+                </div>
+              </div> -->
+              <div class="detail-line">
+                <div>
+                  <span>{{ $t(`${lang}.expressMoney`) }}</span>
+                  <div class="question">
+                    <a href="/free-shipping" target="_blank"><span>?</span></a>
+                    <div class="answer">{{ $t(`${lang}.expressSay`) }}</div>
+                  </div>
+                </div>
+                <div class="hkd color-gold">
+                  +{{ formatCoin(tex.coinType) }} {{ formatMoney(tex.logisticsFee) }}
+                </div>
+              </div>
+              <div class="detail-line">
+                <div>
+                  <span>{{ $t(`${lang}.tex`) }}</span>
+                  <div class="question">
+                    <a href="/international" target="_blank"
+                      ><span>?</span></a
+                    >
+                    <div class="answer">{{ $t(`${lang}.texSay`) }}</div>
+                  </div>
+                </div>
+                <div class="hkd color-gold">
+                  +{{ formatCoin(tex.coinType) }} {{ formatMoney(tex.taxFee) }}
+                </div>
+              </div>
+              <div class="detail-line">
+                <div>
+                  <span>{{ $t(`${lang}.insurance`) }}</span>
+                  <div class="question">
+                    <span>?</span>
+                    <div class="answer">{{ $t(`${lang}.insuranceSay`) }}</div>
+                  </div>
+                </div>
+                <div class="hkd color-gold">
+                  +{{ formatCoin(tex.coinType) }} {{ formatMoney(tex.safeFee) }}
+                </div>
+              </div>
+              <div class="detail-line">
+                <div class="font-size-16 color-333">
+                  {{ $t(`${lang}.totalMoney`) }}
+                </div>
+                <div class="hkd color-pink price-big">
+                  {{ formatCoin(tex.coinType) }} {{ formatMoney(goodsPrice) }}
+                </div>
+              </div>
+              <!-- 折扣金额 -->
+              <div v-show="tex.discount_amount" class="detail-line">
+                <div>{{$t(`${lang}.discountPrice`)}}</div>
+                <div class="hkd color-pink">
+                  <div>- {{formatCoin(tex.coinType)}} {{ formatMoney(tex.discount_amount) }}</div>
+                </div>
+              </div>
+              <div class="detail-line amount">
+                <div class="font-size-16 color-333">{{ $t(`${lang3}.NeedPay`) }}</div>
+                <div v-if="this.$store.state.platform == 40" class="hkd color-pink price-big">
+                  {{ formatCoin(tex.coinType) }}
+                  {{ formatAmount(ultimatelyPay) }}
+                  <!-- {{ formatMoney(tex.payAmount || goodsPrice) }}</span -->
+                </div>
+                <div v-else class="hkd color-pink price-big">
+                  {{ formatCoin(tex.coinType) }}
+                  {{ formatMoney(ultimatelyPay) }}
+                  <!-- {{ formatMoney(tex.payAmount || goodsPrice) }}</span -->
+                </div>
+              </div>
+              <p class="point" v-show="this.$store.state.platform == 40 && floatStr(ultimatelyPay)>0">({{ $t(`${lang}.point`) }})</p>
+            </div>
+          </div>
+          <div class="info-line" />
+          <!-- <div
+            :class="['buy-btn', { disabled: !canSubmit }]"
+            @click="createOrder()"
+          >
+            <span>{{ $store.state.coin }} {{ showOrderAmount }}</span>
+            <span>{{ $t(`${lang}.beiQin`) }}</span>
+          </div> -->
+        </div>
+
+        <div :class="['buy-btn', { disabled: !canSubmit }]" @click.stop="confirmPayment()">
+            <span>{{ $t(`${lang}.beiQin`) }}</span>
+          </div>
+      </div>
+
+      <div v-if="SubmitPayment" class="Submit-payment">
+        <!-- 支付模块 -->
+        <div class="payways">
+          <!-- 支付 -->
+          <div class="pay">
+            <!-- <div class="order-step">
+              <div class="one-step">
+                <div class="step-img">
+                  <img src="../../../static/order/step.png" alt="" />
+                  <span>1</span>
+                </div>
+                <div class="step-arrow">
+                  <img src="../../../static/order/arrow.png" alt="" />
+                </div>
+                <div class="step-title">{{ $t(`${lang2}.confirmOrder`) }}</div>
+                <div class="step-desc">{{ $t(`${lang2}.finishOrderInfo`) }}</div>
+              </div>
+              <div class="one-step">
+                <div class="step-img">
+                  <img src="../../../static/order/step.png" alt="" />
+                  <span>2</span>
+                </div>
+                <div class="step-arrow">
+                  <img src="../../../static/order/arrow.png" alt="" />
+                </div>
+                <div class="step-title">{{ $t(`${lang2}.orderPay`) }}</div>
+                <div class="step-desc">{{ $t(`${lang2}.payWay`) }}</div>
+              </div>
+              <div class="one-step">
+                <div class="step-img">
+                  <span>3</span>
+                </div>
+                <div class="step-arrow" />
+                <div class="step-title">{{ $t(`${lang2}.finishPay`) }}</div>
+                <div class="step-desc" />
+              </div>
+              <div class="step-line-one" />
+              <div class="step-line-two" />
+            </div> -->
+            <div v-loading="goingPay" class="pay-ways">
+              <div class="new-address-title">
+                <div class="na-line" />
+                <div class="na-title">{{ $t(`${lang2}.orderInfo`) }}</div>
+                <!-- <div class="note" v-show="this.$store.state.coin == 'CNY' && this.$store.state.platform === 20"><span class="star">*</span> {{ $t(`${lang2}.Note3`) }}</div> -->
+              </div>
+              <div class="pay-blocks">
+                <!-- paypal -->
+                <div
+                  v-show="this.$store.state.platform !== 20"
+                  :class="{ 'pay-choose': payWay == 6 }"
+                  class="pay-block"
+                  @click="Way(6)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/paypalpay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.PayPal`) }}</div>
+                  <div v-if="this.$store.state.platform == 40" v-show="payWay == 6" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatAmount(tex.pay_amount) }}
+                  </div>
+                  <div v-else v-show="payWay == 6" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay == 6 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWay == 6" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                </div>
+                <!-- vise -->
+                <div
+                  v-show="this.$store.state.platform !== 20"
+                  :class="{ 'pay-choose': payWay == 61 }"
+                  class="pay-block"
+                  @click="Way(61)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/visa.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.visa`) }}</div>
+                  <div v-if="this.$store.state.platform == 40" v-show="payWay === 61" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatAmount(tex.pay_amount) }}
+                  </div>
+                  <div v-else v-show="payWay === 61" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay === 61 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWay == 61" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                </div>
+
+                <!-- 大陆支付宝 -->
+                <div
+                  v-show="this.$store.state.platform == 20"
+                  :class="{ 'pay-choose': payWayCn == 2 }"
+                  class="pay-block"
+                  @click="Way(2)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/alipay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.AliPay`) }}</div>
+                  <div v-show="payWayCn == 2" class="pay-price"> 
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay == 82 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWayCn == 2" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                  <!-- <div class="hint_pay needlogin"><span>*</span> {{ $t(`${lang}.needlogin`) }}</div> -->
+                </div>
+                
+
+                <!-- 香港支付宝 -->
+                <div
+                  v-show="this.$store.state.platform == 10"
+                  :class="{ 'pay-choose': payWay == 84 }"
+                  class="pay-block"
+                  @click="Way(84)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/alipay-HK.png" alt="" class="initial" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.AliPay`) }}</div>
+                  <div v-show="payWay == 84" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay == 84 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWay == 84" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                  <!-- <div class="hint_pay needlogin"><span>*</span> {{ $t(`${lang}.needlogin`) }}</div> -->
+                </div>
+                <!-- <div
+                  :class="{ 'pay-choose': payWay === 8 }"
+                  class="pay-block"
+                  @click="Way(8)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/paydollar.jpg" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.visa`) }}</div>
+                  <div v-show="payWay == 8" class="pay-price">
+                    {{ $store.state.coin }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <div v-show="payWay == 8" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                  <div class="hint_pay"><span>*</span>{{ $t(`${lang}.msg11`) }}</div>
+                </div> -->
+                <!-- 微信（香港） -->
+                <div
+                  v-show="this.$store.state.platform == 10"
+                  :class="{ 'pay-choose': payWay == 83 }"
+                  class="pay-block"
+                  @click="Way(83)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/wechatpay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.AliPay`) }}</div>
+                  <div v-show="payWay == 83" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay == 83 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWay == 83" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                  <!-- <div class="hint_pay needlogin"><span>*</span> {{ $t(`${lang}.needlogin`) }}</div> -->
+                </div>
+
+                <!-- 微信（大陆） -->
+                <div
+                  v-show="this.$store.state.platform == 20"
+                  :class="{ 'pay-choose': payWayCn == 1 }"
+                  class="pay-block"
+                  @click="Way(1)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/wechatpay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.AliPay`) }}</div>
+                  <div v-show="payWayCn == 1" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay == 83 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWayCn == 1" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                  <!-- <div class="hint_pay needlogin"><span>*</span> {{ $t(`${lang}.needlogin`) }}</div> -->
+                </div>
+                <!-- 信用卡 -->
+                <div
+                  v-show="this.$store.state.platform == 10"
+                  :class="{ 'pay-choose': payWay == 81 }"
+                  class="pay-block"
+                  @click="Way(81)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/unionpay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.UnionPay`) }}</div>
+                  <div v-show="payWay === 81" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay === 81 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWay == 81" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                  <!-- <div class="hint_pay needlogin"><span>*</span> {{ $t(`${lang}.msg11`) }}</div> -->
+                </div>
+
+                <!-- 电汇 -->
+                <div
+                  v-show="this.$store.state.platform == 10 || this.$store.state.platform == 40"
+                  :class="{ 'pay-choose': payWay == 11 }"
+                  class="pay-block"
+                  @click="Way(11)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/epay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.EPay`) }}</div>
+                  <div v-if="this.$store.state.platform == 40" v-show="payWay == 11" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatAmount(tex.pay_amount) }}
+                  </div>
+                  <div v-else v-show="payWay == 11" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay == 89 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWay == 11" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                  <!-- <div class="hint_pay needlogin"><span>*</span> {{ $t(`${lang}.needlogin`) }}</div> -->
+                </div>
+                <!-- 支付宝 -->
+                <!-- <div
+                  :class="{ 'pay-choose': payWay == 2 }"
+                  class="pay-block"
+                  @click="Way(2)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/alipay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.AliPay`) }}</div>
+                  <div v-show="payWay == 2" class="pay-price"> -->
+                    <!-- {{ coinType }} {{ formatMoney(price) }} -->
+                    <!-- {{ $store.state.coin }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <div v-show="payWay == 2" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                  <div class="hint_pay"><span>*</span> {{ $t(`${lang}.msg11`) }}</div>
+                </div> -->
+
+
+
+                <!-- <div
+                  :class="{ 'pay-choose': payWay == 1 }"
+                  class="pay-block"
+                  @click="payWay = 1"
+                >
+                  <div class="pay-img">
+                    <img src="../../static/order/epay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang}.EPay`) }}</div>
+                  <div v-show="payWay == 1" class="pay-price">
+                    {{ coinType }} {{ formatMoney(ttPrice) }}
+                  </div>
+                  <div v-show="payWay == 1" class="choose-tick">
+                    <img src="../../static/order/tick.png" alt="" />
+                  </div>
+                  <div class="hint_pay"><span>*</span> {{ $t(`${lang}.msg11`) }}</div>
+                </div> -->
+
+                <!-- <div class="pay-question" @click="answer = true">?</div> -->
+              </div>
+              <!-- <div
+                :class="['buy-btn', { disabled: !canSubmit }]"
+                @click="createOrder()"
+              >
+                <span
+                  >{{ $store.state.coin }}
+                  {{ formatMoney(tex.pay_amount) }}</span
+                >
+                <span>{{ $t(`${lang}.beiQin`) }}</span>
+
+              </div> -->
+              <!-- <div class="pay-btn" @click="goPay()">{{ $t(`${lang2}.pay`) }}</div> -->
+            </div>
+            <!--    unionPayHide-->
+            <div v-show="false">
+              <form :action="actionLink" method="post">
+                <div v-for="(f, index) in form" :key="index">
+                  <label :for="f.name">{{ f.name }}</label>
+                  <input v-model="f.val" :name="f.name" />
+                </div>
+                <input id="unionPay" type="submit" value="akm" />
+              </form>
+            </div>
+            <message-box
+              v-show="answer"
+              :title="$t(`${lang}.msgTitle1`)"
+              :message="$t(`${lang}.msgContent1`)"
+              type="one"
+              @done="answer = false"
+            />
+            <message-box
+              v-show="failedOrder"
+              :title="$t(`${lang}.msgTitle2`)"
+              :message="$t(`${lang}.msgContent2`)"
+              type="one"
+              @done="failedOrder = false"
+            />
+          </div>
+        </div>
+
+        <div v-if="this.$store.state.platform === 20" :class="['buy-btn', { disabled: !canSubmit }]" @click.stop="mainLandPay()">
+          <span>{{ $t(`${lang}.pay`) }}</span>
+        </div>
+        <div v-else-if="this.$store.state.platform === 10 || this.$store.state.platform === 30|| this.$store.state.platform === 40" :class="['buy-btn', { disabled: !canSubmit }]" @click.stop="createOrder()">
+          <span>{{ $t(`${lang}.pay`) }}</span>
+        </div>
+      </div>
+
+      <message-box
+        v-show="confirmBox"
+        :title="$t(`${lang}.msgTitle1`)"
+        :message="$t(`${lang}.msgContent1`)"
+        type="two"
+        @cancel="confirmBox = false"
+        @sure="deleteAddress()"
+      />
+      <message-box
+        v-show="alertBox"
+        :message="wrongMsg"
+        :title="$t(`${lang}.msgTitle1`)"
+        type="one"
+        @done="alertBox = false"
+      />
+    </div>
+    <!-- 繁体和英文 -->
+    <div v-else class="order">
+      <!-- 步骤模块 -->
+      <div class="order-step">
+        <div class="one-step">
+          <div class="step-img">
+            <img src="../../../static/order/step.png" alt="" />
+            <span>1</span>
+          </div>
+          <div class="step-arrow">
+            <img src="../../../static/order/arrow.png" alt="" />
+          </div>
+          <div class="step-title">{{ $t(`${lang}.ConfirmOrder`) }}</div>
+          <div class="step-desc">{{ $t(`${lang}.finishOrder`) }}</div>
+        </div>
+        <div class="one-step">
+          <div class="step-img">
+            <span>2</span>
+          </div>
+          <div class="step-arrow" />
+          <div class="step-title">{{ $t(`${lang}.orderPay`) }}</div>
+          <div class="step-desc" />
+        </div>
+        <div class="one-step">
+          <div class="step-img">
+            <span>3</span>
+          </div>
+          <div class="step-arrow" />
+          <div class="step-title">{{ $t(`${lang}.finishPay`) }}</div>
+          <div class="step-desc" />
+        </div>
+        <div class="step-line" />
+      </div>
+
+      <!-- 用户名称和提示登陆 -->
+      <div class="user-info">
+        <i class="iconfont iconrentou" />
+        <div class="login-line">
+          <span @click="login()">{{ $t(`${lang}.login`) }}</span>
+          <span>{{ $t(`${lang}.balbala`) }}</span>
+          <span @click="register()">{{ $t(`${lang}.Registration`) }}</span>
+          <span>{{ $t(`${lang}.balabalabala`) }}</span>
+        </div>
+      </div>
+
+      <div v-if="showAddress" class="address">
+        <!-- 地址列表模块 -->
+        <div
+          v-show="address.length !== 0"
+          :style="{
+            height: addressMore
+              ? `${270 * Math.ceil(address.length / 2)}px`
+              : '250px'
+          }"
+          class="address-box"
+        >
+          <div class="addr-blocks">
+            <div
+              v-for="(a, index) in address"
+              :key="index"
+              :class="{ 'addr-active': addressIdx == index }"
+              class="addr-block"
+            >
+              <div class="addr-user">{{ a.firstname }} {{ a.lastname }}</div>
+              <div class="addr-user-phone">
+                <div>{{ a.mobile_code }}</div>
+                <div>{{ a.mobile }}</div>
+              </div>
+              <div class="addr-user-email">{{ a.email }}</div>
+              <div class="addr-address">
+                <div>{{ a.address_details }}</div>
+                <div>{{ a.city_name }} {{ a.province_name }} {{ a.country_name }} </div>
+              </div>
+              
+              <div>{{ a.zip_code }}</div>
+              <div class="addr-board" @click="changeAddress(index)" />
+              <span class="ifChoose" :class="{'on': addressIdx == index}"></span>
+              <i
+                class="iconfont iconlajitong"
+                @click="
+                  deleteAddressId = a.id
+                  delIdx = index
+                  confirmBox = true
+                "
+              />
+              <!-- <div
+                v-if="a.is_default == 1"
+                class="font-size-14 mrAdd"
+                style="color: #f29b87; margin-top: 6px;"
+              >
+                {{ $t(`${langs}.mrAddress`) }}
+              </div> -->
+              <!-- <div
+                v-if="a.is_default != 1 && addressIdx == index"
+                class="font-size-14 mrAdd"
+                style="color: #f29b87; margin-top: 6px;"
+                @click="setDefaultAddr(a)"
+              >
+                {{ $t(`${lang}.setDefaultAddr`) }}
+              </div> -->
+              <div
+                class="addr-btn"
+                @click="
+                  newAddress = true
+                  changeAddressInfo(a)
+                "
+              >
+                {{ $t(`${lang}.change`) }}
+              </div>
+              <img src="../../../static/personal/account/address-bar.png" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 新增&修改地址模块 -->
+        <div v-show="addAddress" :style="[{ height: newAddress ? '360px' : '0px' },{ padding: newAddress ? '20px 51px 0 36px' : '0' }]" class="new-address" id="addbox">
+          <div class="new-address-title">
+            <div class="na-line" />
+            <div class="na-title">{{ $t(`${lang}.address`) }}</div>
+            <div class="na-little-word">{{ $t(`${lang}.mustInput`) }}</div>
+          </div>
+          <div class="new-address-input">
+            <!-- 左边输入框 -->
+            <div class="left-side">
+              <!-- 名 -->
+              <div class="input-line">
+                <div class="label"><span class="star">*</span>{{ $t(`${lang}.lastName`) }}</div>
+                <div :class="[{ 'border-change': borderChange === 2 },{ 'border-wrong': wrongInput.firstname }]" class="input-box">
+                  <input
+                    v-model="addressData.firstname"
+                    :class="{ 'wrong-input': wrongInput.firstname }"
+                    type="text"
+                    maxlength="30"
+                    autocomplete="off"
+                    @focus="
+                      borderChange = 2
+                      wrongInput.firstname = false
+                    "
+                    @blur="borderChange = 0"
+                  />
+                  <div v-show="wrongInput.firstname" class="wrong-alert">
+                    {{ $t(`${lang}.wrongInput`) }}
+                  </div>
+                </div>
+              </div>
+              <!-- 姓 -->
+              <div class="input-line">
+                <div class="label"><span class="star">*</span>{{ $t(`${lang}.firstName`) }}</div>
+                <div :class="[{ 'border-change': borderChange === 1 },{ 'border-wrong': wrongInput.lastname }]" class="input-box">
+                  <input
+                    v-model="addressData.lastname"
+                    :class="{ 'wrong-input': wrongInput.lastname }"
+                    type="text"
+                    maxlength="30"
+                    autocomplete="off"
+                    @focus="
+                      borderChange = 1
+                      wrongInput.lastname = false
+                    "
+                    @blur="borderChange = 0"
+                  />
+                  <div v-show="wrongInput.lastname" class="wrong-alert">
+                    {{ $t(`${lang}.wrongInput`) }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- 电话 -->
+              <div class="input-line">
+                <div class="label"><span class="star">*</span>{{ $t(`${lang}.telephone`) }}</div>
+                <div class="tel-special">
+                  <div class="tel-area">
+                    <input :value="phoneNum.phone_code" type="text" autocomplete="off" />
+                    <select v-model="phoneNum">
+                      <option v-for="(p, index) in phoneJson" :key="index" :value="p" >{{ psn ? p.en :psn ? p.cn :p.zh }}{{ p.phone_code }}</option>
+                    </select>
+                    <i class="iconfont iconxiala" />
+                  </div>
+                  <div :class="[{ 'border-change': borderChange === 3 },{ 'border-wrong': wrongInput.mobile }]"class="input-box tel">
+                    <input
+                      v-model="addressData.mobile"
+                      :class="{ 'wrong-input': wrongInput.mobile }"
+                      type="text"
+                      autocomplete="off"
+                      @focus="
+                        borderChange = 3
+                        wrongInput.mobile = false
+                      "
+                      @blur="borderChange = 0"
+                      @input="mobileIpt"
+                      :maxlength="mobileMax"
+                    />
+                    <div v-show="wrongInput.mobile" class="wrong-alert">
+                      {{ $t(`${lang}.wrongInput`) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 邮箱 -->
+              <div class="input-line">
+                <div class="label"><span class="star">*</span>{{ $t(`${lang}.email`) }}</div>
+                <div :class="[{ 'border-change': borderChange === 4 },{ 'border-wrong': wrongInput.email }]" class="input-box">
+                  <input
+                    v-model="addressData.email"
+                    :class="{ 'wrong-input': wrongInput.email }"
+                    type="text"
+                    autocomplete="off"
+                    maxlength="60"
+                    @focus="
+                      borderChange = 4
+                      wrongInput.email = false
+                    "
+                    @blur="borderChange = 0"
+                  />
+                  <div v-show="wrongInput.email" class="wrong-alert">
+                    {{ $t(`${lang}.wrongInput`) }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- 确认邮箱 -->
+              <div class="input-line">
+                <div class="label"><span class="star">*</span>{{ $t(`${lang}.checkEmail`) }}</div>
+                <div :class="[{ 'border-change': borderChange === 5 },{ 'border-wrong': wrongInput.checkEmail }]" class="input-box">
+                  <input
+                    v-model="addressData.checkEmail"
+                    :class="{ 'wrong-input': wrongInput.checkEmail }"
+                    type="text"
+                    maxlength="60"
+                    autocomplete="off"
+                    @focus="
+                      borderChange = 5
+                      wrongInput.checkEmail = false
+                    "
+                    @blur="borderChange = 0"
+                  />
+                  <div v-show="wrongInput.checkEmail" class="wrong-alert">
+                    {{ $t(`${lang}.wrongInputAgain`) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 右边输入框 -->
+            <div class="right-side">
+              <!-- 国家 -->
+              <div class="input-line">
+                <div class="label"><span class="star">*</span>{{ $t(`${lang}.country`) }}</div>
+                <div class="input-box">
+                  <input :value="country.areaName" type="address" autocomplete="off" />
+                  <select  v-model="country" @change="getListTwo()">
+                    <option
+                      v-for="(c, index) in countryList" 
+                      :key="index"
+                      :value="c"
+                      >{{ c.areaName }}</option
+                    >
+                  </select>
+                  <i class="iconfont iconxiala" />
+                </div>
+              </div>
+
+              <!--          省份-->
+              <div class="input-line">
+                <div class="label">{{ $t(`${lang}.province`) }}</div>
+                <div class="input-box">
+                  <input :value="province.areaName" type="address" autocomplete="off" />
+                  <select v-model="province" @change="getListThree()">
+                    <option
+                      v-for="(p, index) in provinceList"
+                      :key="index"
+                      :value="p"
+                      >{{ p.areaName }}</option
+                    >
+                  </select>
+                  <i class="iconfont iconxiala" />
+                </div>
+              </div>
+
+              <!--          城市-->
+              <div class="input-line">
+                <div class="label">{{ $t(`${lang}.city`) }}</div>
+                <div class="input-box">
+                  <input :value="city.areaName" type="address" autocomplete="off" />
+                  <select v-model="city">
+                    <option
+                      v-for="(c, index) in cityList"
+                      :key="index"
+                      :value="c"
+                      >{{ c.areaName }}</option
+                    >
+                  </select>
+                  <i class="iconfont iconxiala" />
+                </div>
+              </div>
+
+              <!--          详细地址-->
+              <div class="input-line">
+                <div class="label"><span class="star">*</span>{{ $t(`${lang}.longAddress`) }}</div>
+                <div :class="[{ 'border-change': borderChange === 6 },{ 'border-wrong': wrongInput.address_details }]" class="input-box">
+                  <textarea
+                    v-model="addressData.address_details"
+                    :class="{ 'wrong-input': wrongInput.address_details }"
+                    maxlength="300"
+                    autocomplete="off"
+                    @focus="
+                      borderChange = 6
+                      wrongInput.address_details = false
+                    "
+                    @blur="borderChange = 0"
+                  />
+                  <div v-show="wrongInput.address_details" class="wrong-alert">
+                    {{ $t(`${lang}.wrongInput`) }}
+                  </div>
+                </div>
+              </div>
+
+              <!--          邮编-->
+              <div class="input-line">
+                <div class="label">{{ $t(`${lang}.zipCode`) }}</div>
+                <div :class="[{ 'border-change': borderChange === 7 },{ 'border-wrong': wrongInput.zip_code }]" class="input-box">
+                  <input
+                    v-model="addressData.zip_code"
+                    :class="{ 'wrong-input': wrongInput.zip_code }"
+                    type="text"
+                    maxlength="11"
+                    autocomplete="off"
+                    @focus="
+                      borderChange = 7
+                      wrongInput.zip_code = false
+                    "
+                    @blur="borderChange = 0"
+                    @input="keydown"
+                  />
+                  <div v-show="wrongInput.zip_code" class="wrong-alert">
+                    {{ $t(`${lang}.wrongInput`) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="new-address-btn" @click="isEdit ? saveAddressEn() : createAddressEn()">
+            {{ $t(`${lang}.sure`)}}
+            <span v-show="!isEdit">{{ $t(`${lang}.add`) }}</span>
+            <span v-show="isEdit">{{ $t(`${lang}.edit`) }}</span>
+          </div>
+          <div v-show="noWay" class="close-new-address-btn" @click="newAddress = false;resetAddressInp()">
+            {{ $t(`${lang}.seeLess`) }}
+          </div>
+        </div>
+
+        <!-- 购物车模块 -->
+        <div class="cart-top-bar">
+          <span>{{ $t(`${lang}.info`) }}</span
+          ><span>{{ $t(`${lang}.number`) }}</span
+          ><span>{{ $t(`${lang}.oldPrice`) }}</span
+          ><span>{{ $t(`${lang}.newPrice`) }}</span>
+        </div>
+        <div class="cart-goods">
+          <div v-for="(g, index) in good" :key="index">
+            <div v-if="g.groupType === null && g.data[0].goodsType !== '19'" class="finished">
+              <div class="cart-radio"></div>
+              <single :g="g" :options="false"></single>
+            </div>
+            <div v-if="g.data[0].goodsType == '19'" class="couple">
+              <div class="cart-radio"></div>
+              <double :g="g" :options="false"></double>
+            </div>
+            <div v-if="g.groupType === 2" class="customization">
+              <div class="cart-radio"></div>
+              <madeUp
+                :g="g"
+                :options="false"
+                :word="$t(`cart.customMade`)"
+              ></madeUp>
+            </div>
+          </div>
+        </div>
+
+        <!-- 订单信息模块 -->
+        <div class="order-info">
+          <div class="left-info">
+            <div class="new-address-title">
+              <div class="na-line" />
+              <div class="na-title">{{ $t(`${lang}.deliveryInformation`) }}</div>
+            </div>
+            <!-- <div v-if="good.length > 1" class="is-pack">
+              <div
+                v-show="!isAllPack"
+                class="free-check"
+                @click="isAllPack = !isAllPack"
+              />
+              <i
+                v-show="isAllPack"
+                class="iconfont icongou"
+                @click="isAllPack = !isAllPack"
+              />
+              <div>
+                <span>{{ $t(`${lang}.sendTogether`) }}</span
+                ><span>（{{ $t(`${lang}.chatBor`) }}）</span>
+              </div>
+            </div> -->
+            <div class="send-time">
+              <div class="send-left">
+                <div>{{ $t(`${lang}.sendTime`) }}</div>
+                <div>
+                  <router-link to="/deliveryPolicy">{{
+                    $t(`${lang}.checkDeliveryPolicy`)
+                  }}</router-link>
+                </div>
+              </div>
+              <div class="send-right">
+                {{ tex.plan_days }}{{ $t(`${lang}.goSingKei`) }}
+              </div>
+            </div>
+            <!-- <div class="after-sale-email">
+              <div>{{ $t(`${lang}.showHouEmail`) }}</div>
+              <div>
+                <div
+                  v-show="!isSameEmail"
+                  class="free-check"
+                  @click="isSameEmail = !isSameEmail"
+                />
+                <i
+                  v-show="isSameEmail"
+                  class="iconfont icongou"
+                  @click="isSameEmail = !isSameEmail"
+                />
+                <span>{{ $t(`${lang}.sameTongAddress`) }}</span>
+              </div>
+            </div> -->
+            <!-- <div
+              :class="[
+                { 'border-change': borderChange === 8 },
+                { 'border-wrong': wrongInput.odMail }
+              ]"
+              class="after-sale-email-input"
+            >
+              <input
+                v-show="!isSameEmail"
+                v-model="orderEmail"
+                :class="{ 'wrong-input': wrongInput.odMail }"
+                type="text"
+                @focus="
+                  borderChange = 8
+                  wrongInput.odMail = false
+                "
+                @blur="borderChange = 0"
+              />
+              <input
+                v-show="isSameEmail"
+                v-model="addressData.userMail"
+                :class="{ 'wrong-input': wrongInput.odMail }"
+                type="text"
+                @focus="
+                  borderChange = 8
+                  wrongInput.odMail = false
+                "
+                @blur="borderChange = 0"
+              />
+            </div> -->
+            <div class="message">
+              <div class="message-title">{{ $t(`${lang}.remark`) }}</div>
+              <textarea
+                maxlength="500"
+                v-model="remark"
+                :class="[
+                  { 'border-change': borderChange === 9 },
+                  { 'wrong-input': wrongInput.remark },
+                  { 'border-wrong': wrongInput.remark }
+                ]"
+                @focus="
+                  borderChange = 9
+                  wrongInput.remark = false
+                "
+                @blur="borderChange = 0"
+              />
+              <span class="tex-count" :class="{'color-red':remark.length == 500}">{{texsum}}/500</span>
+            </div>
+
+            <!-- 发票按钮 -->
+            <div class="invoice">
+
+              <div class="invoice-btn" v-if="this.areaId == '1'">
+                <div v-show="!iconShow" @click="show2">
+                  <img style="width:30px;height:30px" src="../../../static/order/untick.png" alt="">
+                  <span>{{ $t(`${lang3}.default`) }}</span>
+                </div>
+                <div v-show="iconShow" @click="show2">
+                  <img style="width:30px;height:30px" src="../../../static/order/ticks.png" alt="">
+                  <span>{{ $t(`${lang3}.Invoicing`) }}</span>
+                </div>
+              </div>
+              <div class="invoice-box" v-show="invoiceBox">
+                <div class="msg">
+                  <div class="msgbox" v-show="content">
+                    <div @click="close" class="cha"><i class="el-icon-circle-close "></i></div>
+
+                    <p class="title">{{ $t(`${lang3}.Invoicings`) }}</p>
+                    <div class="btn_type">
+                      <button @click="zhizhi(0)" :class="{active:isactive}">{{ $t(`${lang3}.PaperInvoice`) }}</button>
+                      <button @click="dianzi(1)" :class="{active:Active}">{{ $t(`${lang3}.ElectronicInvoice`) }}</button>
+                    </div>
+                    <!-- 纸质 -->
+                    <div class="input-line" >
+                      <div class="label"><span class="star"></span>{{ $t(`${lang3}.InvoiceType`) }}</div>
+                      <div class="input-box" v-show="isactive == true">
+                        <input
+                          style="text-align:center;"
+                          disabled
+                          v-model="aa"
+                          readonly
+                          :class="{ 'wrong-input': wrongInput.lastname }"
+                          type="text"
+                        />
+                      </div>
+                      <div class="input-box" v-show="Active == true">
+                        <input
+                          style="text-align:center;"
+                          disabled
+                          v-model="bb"
+                          readonly
+                          :class="{ 'wrong-input': wrongInput.lastname }"
+                          type="text"
+                        />
+                      </div>
+                    </div>
+                    <!-- 电子 -->
+                    <!-- <div class="input-line" >
+                      <div class="label"><span class="star"></span>{{ $t(`${lang3}.InvoiceType`) }}</div>
+                      <div class="input-box">
+                        <input
+                          style="text-align:center;"
+                          disabled
+                          v-model="bb"
+                          readonly
+                          :class="{ 'wrong-input': wrongInput.lastname }"
+                          type="text"
+                        />
+                      </div>
+                    </div> -->
+                    <div class="base-info-line">
+                      <div class="base-info-line-title"><span class="star">*</span>{{ $t(`${lang3}.HeaderType`) }}</div>
+                      <div class="base-info-line-content marriage-choose" >
+                        <el-radio-group v-model="invoice.invoice_type" @change="handle">
+                          <el-radio :label="2">{{ $t(`${lang3}.UnBusinessUnit`) }}</el-radio>
+                          <el-radio :label="1">{{ $t(`${lang3}.BusinessUnit`) }}</el-radio>
+                        </el-radio-group>
+                        <div v-show="redioShow" class="emplty">
+                          {{ $t(`${lang3}.hint1`) }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 发票抬头 -->
+                    <div class="input-line">
+                      <div class="label"><span class="star">*</span>{{ $t(`${lang3}.Invoice`) }}</div>
+                      <div
+                        :class="[
+                          { 'border-change': borderChange === 2 },
+                          { 'border-wrong': typeShow }
+                        ]"
+                        class="input-box"
+                      >
+                        <input
+                          v-model="invoice.invoice_title"
+                          :class="{ 'wrong-input': typeShow }"
+                          type="text"
+                          @focus="
+                            borderChange = 2
+                            typeShow = false
+                          "
+                          @blur="borderChange = 0"
+                        />
+                      </div>
+                    </div>
+                    <div v-show="typeShow" class="empltyErr">
+                      {{ $t(`${lang3}.hint2`) }}
+                    </div>
+                    <!-- 发票税号 -->
+                    <div class="input-line">
+                      <div class="label"><span v-if="invoice.invoice_type==1" class="star">*</span>{{ $t(`${lang3}.TaxID`) }}</div>
+                      <div
+                        :class="[
+                          { 'border-change': borderChange === 3 },
+                          { 'border-wrong': taxShow }
+                        ]"
+                        class="input-box"
+                      >
+                        <input
+                          v-model="invoice.tax_number"
+                          :class="{ 'wrong-input': taxShow }"
+                          type="text"
+                          @focus="
+                            borderChange = 3
+                          taxShow = false
+                          "
+                          @blur="borderChange = 0"
+                        />
+                      </div>
+                    </div>
+                    <div v-show="taxShow" class="empltyErr">
+                      {{ $t(`${lang3}.hint3`) }}
+                    </div>
+                    <!-- 邮箱 -->
+                    <div class="email-box">
+                      <div class="input-line" v-show="Active == true">
+                        <div class="label"><span class="star">*</span>{{ $t(`${lang3}.email`) }}</div>
+                        <div
+                          :class="[
+                            { 'border-change': borderChange === 1 },
+                            { 'border-wrong': mailShow }
+                          ]"
+                          class="input-box"
+                        >
+                          <input
+                            v-model="invoice.email"
+                            :class="{ 'wrong-input': mailShow }"
+                            type="text"
+                            @focus="
+                              borderChange = 1
+                              mailShow = false
+                            "
+                            @blur="borderChange = 0"
+                          />
+                        </div>
+                      </div>
+                      <!-- <div v-show="emailShow" class="empltyErr">
+                        {{ $t(`${lang3}.hint4`) }}
+                      </div> -->
+                      <div v-show="mailShow" class="empltyErr">
+                        {{ $t(`${lang3}.hint5`) }}
+                      </div>
+                    </div>
+                    <div class="total">
+                      <div class="label"><span class="star"></span>{{ $t(`${lang3}.totalAmount`) }}</div>
+                      <div class="totle-price">
+                        <span>{{ formatCoin(tex.coinType) }} {{ formatMoney(ultimatelyPay) }}</span>
+                      </div>
+                    </div>
+                    <p class="tips">{{ $t(`${lang3}.tips`) }}</p>
+                    <div class="btn">
+                      <button @click="confirm">{{ $t(`${lang3}.confirm`) }}</button>
+                    </div>
+                  </div>
+                  <div class="msgbox" v-show="gou">
+                    <div class="gou-img">
+                      <img src="../../../static/order/ticks.png" alt="">
+                      <p>{{ $t(`${lang3}.Submitted`) }}</p>
+                    </div>
+                    <!-- <div class="btn"> Submitted
+                      <button @click="complete">{{ $t(`${lang3}.carryOut`) }}</button>
+                    </div> -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="right-info">
+            <!-- 优惠券 -->
+            <!-- <div v-show="!makeGay" class="coupon">
+              <div class="two-on-one">
+                <input
+                  ref="too"
+                  v-model="tooInp"
+                  :placeholder="$t(`${lang}.tooInpShort`)"
+                  type="text"
+                  class="too-input"
+                  @focus="die = false"
+                  @input="fuckYouM"
+                />
+              </div>
+              <div
+                :style="[
+                  { backgroundColor: fuckYou ? 'rgba(170,138,123,1)' : '#eee' }
+                ]"
+                class="too-btn"
+                @click="checkCount"
+              >
+                {{ $t(`${lang}.exchange`) }}
+              </div>
+              <div v-show="die" class="too-die">{{ familyDie }}</div>
+              <div class="too-wenhao">
+                ?
+                <div class="too-gay">
+                  <div>{{ $t(`${lang}.gay1`) }}</div>
+                  <div>{{ $t(`${lang}.gay2`) }}</div>
+                  <div>{{ $t(`${lang}.gay3`) }}</div>
+                </div>
+              </div>
+            </div> -->
+            <div class="new-address-title" style="width: auto;position: relative;">
+              <div class="na-line" />
+              <div class="na-title">{{ $t(`${lang}.kouMaiInfo`) }}</div>
+              <div class="add-shopping-card" v-if="this.$store.state.platform !== 30" @click="login()">+{{ $t(`${lang}.useShoppingCard`) }}</div>
+            </div>
+            <div class="price-detail">
+              <div class="detail-line">
+                <div>{{ $t(`${lang}.goodsNum`) }}</div>
+                <div class="hkd">{{ good.length }}</div>
+              </div>
+              <div class="detail-line">
+                <div>{{ $t(`${lang}.goodsNumNum`) }}</div>
+                <div class="hkd">
+                  {{ formatCoin(tex.coinType) }} {{ formatMoney(goodsPrice) }}
+                </div>
+              </div>
+              <div v-show="makeGay" class="detail-line">
+                <div>
+                  *{{ $t(`${lang}.coupon`) }}:
+                  <span style="color: red;">{{ tooInp }}</span>
+                  <span
+                    style="color: red;text-decoration: underline;cursor: pointer;"
+                    @click="removeCoupon"
+                    >{{ $t(`${lang}.sc`) }}</span
+                  >
+                </div>
+                <div class="hkd color-pink">
+                  -{{ formatCoin(tex.coinType) }} {{ formatMoney(preferFee) }}
+                </div>
+              </div>
+              <div class="detail-line">
+                <div>
+                  <span>{{ $t(`${lang}.expressMoney`) }}</span>
+                  <div class="question">
+                    <a href="/free-shipping" target="_blank"><span>?</span></a>
+                    <div class="answer">{{ $t(`${lang}.expressSay`) }}</div>
+                  </div>
+                </div>
+                <div class="hkd color-gold">
+                  +{{ formatCoin(tex.coinType) }} {{ formatMoney(tex.logisticsFee) }}
+                </div>
+              </div>
+              <div class="detail-line">
+                <div>
+                  <span>{{ $t(`${lang}.tex`) }}</span>
+                  <div class="question">
+                    <a href="/international" target="_blank"
+                      ><span>?</span></a
+                    >
+                    <div class="answer">{{ $t(`${lang}.texSay`) }}</div>
+                  </div>
+                </div>
+                <div class="hkd color-gold">
+                  +{{ formatCoin(tex.coinType) }} {{ formatMoney(tex.taxFee) }}
+                </div>
+              </div>
+              <div class="detail-line">
+                <div>
+                  <span>{{ $t(`${lang}.insurance`) }}</span>
+                  <div class="question">
+                    <span>?</span>
+                    <div class="answer">{{ $t(`${lang}.insuranceSay`) }}</div>
+                  </div>
+                </div>
+                <div class="hkd color-gold">
+                  +{{ formatCoin(tex.coinType) }} {{ formatMoney(tex.safeFee) }}
+                </div>
+              </div>
+              
+            
+              <!-- 优惠券 -->
+              <div v-show="objectIfEmpty(tex.coupons) && isLogin" class="detail-line">
+                <div>{{ $t(`${lang}.coupon`) }}</div>
+                <div class="hkd color-pink" style="cursor: pointer;" :class="{'under-line': 1}" @click="showUseCoupons">
+                  <!-- <div v-if="couponCodeR.couponId">- {{$store.state.coin}} {{ formatMoney(couponCodeR.couponCode) }}</div> -->
+                  <div>{{$t(`${lang}.notAvailable`)}}</div>
+                </div>
+              </div>
+              
+              <div class="detail-line">
+                <div class="font-size-16 color-333">
+                  {{ $t(`${lang}.totalMoney`) }}
+                </div>
+                <div class="hkd color-pink price-big">
+                  {{ formatCoin(tex.coinType) }} {{ formatMoney(goodsPrice) }}
+                </div>
+              </div>
+
+              <!-- 折扣金额 -->
+              <div v-show="tex.discount_amount" class="detail-line">
+                <div>{{$t(`${lang}.discountPrice`)}}</div>
+                <div class="hkd color-pink">
+                  <div>- {{formatCoin(tex.coinType)}} {{ formatMoney(tex.discount_amount) }}</div>
+                </div>
+              </div>
+              
+
+              <div class="detail-line amount">
+                <div class="font-size-16 color-333">{{ $t(`${lang3}.NeedPay`) }}</div>
+                <div v-if="this.$store.state.platform == 40" class="hkd color-pink price-big">
+                  {{ formatCoin(tex.coinType) }}
+                  {{ formatAmount(ultimatelyPay) }}
+                  <!-- {{ formatMoney(tex.payAmount || goodsPrice) }}</span --> 
+                </div>
+                <div v-else class="hkd color-pink price-big">
+                  {{ formatCoin(tex.coinType) }}
+                  {{ formatMoney(ultimatelyPay) }}
+                  <!-- {{ formatMoney(tex.payAmount || goodsPrice) }}</span -->
+                </div>
+              </div>
+              <p class="point" v-show="this.$store.state.platform == 40 && floatStr(ultimatelyPay)>0">({{ $t(`${lang}.point`) }})</p>
+            </div>
+          </div>
+          <div class="info-line" />
+        </div>
+
+        <div :class="['buy-btn', { disabled: !canSubmit }]" @click.stop="confirmPayment">
+            <span>{{ $t(`${lang}.beiQin`) }}</span>
+          </div>
+      </div>
+
+      <div v-if="SubmitPayment" class="Submit-payment">
+        <!-- 支付模块 -->
+        <div class="payways">
+          <!-- 支付 -->
+          <div class="pay">
+            <!-- <div class="order-step">
+              <div class="one-step">
+                <div class="step-img">
+                  <img src="../../../static/order/step.png" alt="" />
+                  <span>1</span>
+                </div>
+                <div class="step-arrow">
+                  <img src="../../../static/order/arrow.png" alt="" />
+                </div>
+                <div class="step-title">{{ $t(`${lang2}.confirmOrder`) }}</div>
+                <div class="step-desc">{{ $t(`${lang2}.finishOrderInfo`) }}</div>
+              </div>
+              <div class="one-step">
+                <div class="step-img">
+                  <img src="../../../static/order/step.png" alt="" />
+                  <span>2</span>
+                </div>
+                <div class="step-arrow">
+                  <img src="../../../static/order/arrow.png" alt="" />
+                </div>
+                <div class="step-title">{{ $t(`${lang2}.orderPay`) }}</div>
+                <div class="step-desc">{{ $t(`${lang2}.payWay`) }}</div>
+              </div>
+              <div class="one-step">
+                <div class="step-img">
+                  <span>3</span>
+                </div>
+                <div class="step-arrow" />
+                <div class="step-title">{{ $t(`${lang2}.finishPay`) }}</div>
+                <div class="step-desc" />
+              </div>
+              <div class="step-line-one" />
+              <div class="step-line-two" />
+            </div> -->
+            <div v-loading="goingPay" class="pay-ways">
+              <div class="new-address-title">
+                <div class="na-line" />
+                <div class="na-title">{{ $t(`${lang2}.orderInfo`) }}</div>
+                <!-- <div class="note" v-show="this.$store.state.coin == 'CNY' && this.$store.state.platform === 20"><span class="star">*</span> {{ $t(`${lang2}.Note3`) }}</div> -->
+              </div>
+              <div class="pay-blocks">
+                <!-- paypal -->
+                <div
+                  v-show="this.$store.state.platform !== 20"
+                  :class="{ 'pay-choose': payWay == 6 }"
+                  class="pay-block"
+                  @click="Way(6)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/paypalpay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.PayPal`) }}</div>
+                  <div v-if="this.$store.state.platform == 40" v-show="payWay == 6" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatAmount(tex.pay_amount) }}
+                  </div>
+                  <div v-else v-show="payWay == 6" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay == 6 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWay == 6" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                </div>
+                <!-- vise -->
+                <div
+                  v-show="this.$store.state.platform !== 20"
+                  :class="{ 'pay-choose': payWay == 61 }"
+                  class="pay-block"
+                  @click="Way(61)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/visa.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.visa`) }}</div>
+                  <div v-if="this.$store.state.platform == 40" v-show="payWay === 61" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatAmount(tex.pay_amount) }}
+                  </div>
+                  <div v-else v-show="payWay === 61" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay === 61 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWay == 61" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                </div>
+                <!-- 大陆支付宝 -->
+                <div
+                  v-show="this.$store.state.platform == 20"
+                  :class="{ 'pay-choose': payWayCn == 2 }"
+                  class="pay-block"
+                  @click="Way(2)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/alipay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.AliPay`) }}</div>
+                  <div v-show="payWayCn == 2" class="pay-price"> 
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay == 82 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWayCn == 2" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                  <!-- <div class="hint_pay needlogin"><span>*</span> {{ $t(`${lang}.needlogin`) }}</div> -->
+                </div>
+
+                <!-- 香港支付宝 -->
+                <div
+                  v-show="this.$store.state.platform == 10"
+                  :class="{ 'pay-choose': payWay == 84 }"
+                  class="pay-block"
+                  @click="Way(84)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/alipay-HK.png" alt="" class="initial" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.AliPay`) }}</div>
+                  <div v-show="payWay == 84" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay == 84 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWay == 84" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                  <!-- <div class="hint_pay needlogin"><span>*</span> {{ $t(`${lang}.needlogin`) }}</div> -->
+                </div>
+
+                <!-- <div
+                  :class="{ 'pay-choose': payWay === 8 }"
+                  class="pay-block"
+                  @click="Way(8)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/paydollar.jpg" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.visa`) }}</div>
+                  <div v-show="payWay == 8" class="pay-price">
+                    {{ $store.state.coin }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <div v-show="payWay == 8" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                  <div class="hint_pay"><span>*</span> {{ $t(`${lang}.msg11`) }}</div>
+                </div> -->
+                <!-- 微信（香港） -->
+                <div
+                  v-show="this.$store.state.platform == 10"
+                  :class="{ 'pay-choose': payWay == 83 }"
+                  class="pay-block"
+                  @click="Way(83)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/wechatpay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.AliPay`) }}</div>
+                  <div v-show="payWay == 83" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay == 83 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWay == 83" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                <!-- <div class="hint_pay needlogin"><span>*</span> {{ $t(`${lang}.needlogin`) }}</div> -->
+                </div>
+
+                <!-- 微信（大陆） -->
+                <div
+                  v-show="this.$store.state.platform == 20"
+                  :class="{ 'pay-choose': payWayCn == 1 }"
+                  class="pay-block"
+                  @click="Way(1)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/wechatpay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.AliPay`) }}</div>
+                  <div v-show="payWayCn == 1" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay == 83 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWayCn == 1" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                <!-- <div class="hint_pay needlogin"><span>*</span> {{ $t(`${lang}.needlogin`) }}</div> -->
+                </div>
+                <!-- 信用卡 -->
+                <div
+                  v-show="this.$store.state.platform == 10"
+                  :class="{ 'pay-choose': payWay == 81 }"
+                  class="pay-block"
+                  @click="Way(81)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/unionpay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.UnionPay`) }}</div>
+                  <div v-show="payWay === 81" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay === 81 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWay == 81" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                  <!-- <div class="hint_pay needlogin"><span>*</span> {{ $t(`${lang}.msg11`) }}</div> -->
+                </div>
+
+                <!-- 电汇 -->
+                <div
+                  v-show="this.$store.state.platform == 10 || this.$store.state.platform == 40"
+                  :class="{ 'pay-choose': payWay == 11 }"
+                  class="pay-block"
+                  @click="Way(11)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/epay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.EPay`) }}</div>
+                  <div v-if="this.$store.state.platform == 40" v-show="payWay == 11" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatAmount(tex.pay_amount) }}
+                  </div>
+                  <div v-else v-show="payWay == 11" class="pay-price">
+                    {{ formatCoin(tex.coinType) }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <!-- <div v-show="payWay == 89 && this.$store.state.coin == 'CNY' && this.$store.state.platform === 20" class="pay-price-change">
+                    ({{ coinHKD }} {{ formatMoney(tex.priceHKD) }})
+                  </div> -->
+                  <div v-show="payWay == 11" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                  <!-- <div class="hint_pay needlogin"><span>*</span> {{ $t(`${lang}.needlogin`) }}</div> -->
+                </div>
+                <!-- 支付宝 -->
+                <!-- <div
+                  :class="{ 'pay-choose': payWay == 2 }"
+                  class="pay-block"
+                  @click="Way(2)"
+                >
+                  <div class="pay-img">
+                    <img src="../../../static/order/alipay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang2}.AliPay`) }}</div>
+                  <div v-show="payWay == 2" class="pay-price"> -->
+                    <!-- {{ coinType }} {{ formatMoney(price) }} -->
+                    <!-- {{ $store.state.coin }} {{ formatMoney(tex.pay_amount) }}
+                  </div>
+                  <div v-show="payWay == 2" class="choose-tick">
+                    <img src="../../../static/order/tick.png" alt="" />
+                  </div>
+                  <div class="hint_pay"><span>*</span> {{ $t(`${lang}.msg11`) }}</div>
+                </div> -->
+
+
+
+                <!-- <div
+                  :class="{ 'pay-choose': payWay == 1 }"
+                  class="pay-block"
+                  @click="payWay = 1"
+                >
+                  <div class="pay-img">
+                    <img src="../../static/order/epay.png" alt="" />
+                  </div>
+                  <div class="pay-desc">{{ $t(`${lang}.EPay`) }}</div>
+                  <div v-show="payWay == 1" class="pay-price">
+                    {{ coinType }} {{ formatMoney(ttPrice) }}
+                  </div>
+                  <div v-show="payWay == 1" class="choose-tick">
+                    <img src="../../static/order/tick.png" alt="" />
+                  </div>
+                  <div class="hint_pay"><span>*</span> {{ $t(`${lang}.msg11`) }}</div>
+                </div> -->
+
+
+                <!-- <div class="pay-question" @click="answer = true">?</div> -->
+              </div>
+              <!-- <div
+                :class="['buy-btn', { disabled: !canSubmit }]"
+                @click="createOrder()"
+              >
+                <span
+                  >{{ $store.state.coin }}
+                  {{ formatMoney(tex.pay_amount) }}</span
+                >
+                <span>{{ $t(`${lang}.beiQin`) }}</span>
+
+              </div> -->
+              <!-- <div class="pay-btn" @click="goPay()">{{ $t(`${lang2}.pay`) }}</div> -->
+            </div>
+            <!--    unionPayHide-->
+            <div v-show="false">
+              <form :action="actionLink" method="post">
+                <div v-for="(f, index) in form" :key="index">
+                  <label :for="f.name">{{ f.name }}</label>
+                  <input v-model="f.val" :name="f.name" />
+                </div>
+                <input id="unionPay" type="submit" value="akm" />
+              </form>
+            </div>
+            <message-box
+              v-show="answer"
+              :title="$t(`${lang}.msgTitle1`)"
+              :message="$t(`${lang}.msgContent1`)"
+              type="one"
+              @done="answer = false"
+            />
+            <message-box
+              v-show="failedOrder"
+              :title="$t(`${lang}.msgTitle2`)"
+              :message="$t(`${lang}.msgContent2`)"
+              type="one"
+              @done="failedOrder = false"
+            />
+          </div>
+        </div>
+
+        <div v-if="this.$store.state.platform === 20" :class="['buy-btn', { disabled: !canSubmit }]" @click.stop="mainLandPay()">
+          <span>{{ $t(`${lang}.pay`) }}</span>
+        </div>
+        <div v-else-if="this.$store.state.platform === 10 || this.$store.state.platform === 30|| this.$store.state.platform === 40" :class="['buy-btn', { disabled: !canSubmit }]" @click.stop="createOrder()">
+          <span>{{ $t(`${lang}.pay`) }}</span>
+        </div>
+      </div>
+
+      <message-box
+        v-show="confirmBox"
+        :title="$t(`${lang}.msgTitle1`)"
+        :message="$t(`${lang}.msgContent1`)"
+        type="two"
+        @cancel="confirmBox = false"
+        @sure="deleteAddress()"
+      />
+      <message-box
+        v-show="alertBox"
+        :message="wrongMsg"
+        :title="$t(`${lang}.msgTitle1`)"
+        type="one"
+        @done="alertBox = false"
+      />
+    </div>
+    <div class="pop-layer" v-if="ifShowLayer"></div>
+    <!-- 电汇弹窗 -->
+    <div class="wireTransfer" v-show="transfer">
+      <div class="msg">
+        <div class="msgbox" >
+          <div class="title">
+            {{ $t(`${lang2}.pleaseSelectAccount`) }}
+            <img @click="closed" class="close" src="../../../static/order/closed.png" alt="">
+          </div>
+          <div class="content">
+            <div v-if="this.$store.state.platform === 40" class="Amount">
+              <span>{{ $t(`${lang2}.paidAmount`) }}</span>
+              {{ formatCoin(coinType) }} {{ formatAmount(ultimatelyPay) }}
+              <!-- <span class="price-hkd">({{ coinHKD }} {{ formatMoney(priceHKD) }})</span> -->
+            </div>
+            <div v-else class="Amount">
+              <span>{{ $t(`${lang2}.paidAmount`) }}</span>
+              {{ formatCoin(coinType) }} {{ formatMoney(ultimatelyPay) }}
+            </div>
+            <div class="prompt">
+              <p>{{ $t(`${lang}.Note2`) }}</p>
+            </div>
+            <div class="accounts-block">
+              <div class="account-ways" v-for="(item, index) in accountlist" :key="index">
+                <div :class="accountWay === index ? 'account-choose' : ''" @click="changeWay(index)" class="account-block">
+                  <div class="align-center">
+                    <div class="account">
+                      <span>{{ $t(`${lang2}.Account`) }}</span>
+                      <span>{{item.bank_name}}</span>
+                    </div>
+                    <div class="account-num">
+                      <span>{{ $t(`${lang2}.AccountNumber`) }}</span>
+                      <span>{{item.account}}</span>
+                    </div>
+                    <div class="account-name">
+                      <span>{{ $t(`${lang2}.AccountName`) }}</span>
+                      <span>{{item.account_name}}</span>
+                    </div>
+                    <div class="account-name">
+                      <span>{{ $t(`${lang2}.bankAddress`) }}</span>
+                      <span>{{item.bank_address}}</span>
+                    </div>
+                    <div class="account-name">
+                      <span>{{ $t(`${lang2}.SwiftCode`) }}</span>
+                      <span>{{item.swift_code}}</span>
+                    </div>
+                    <div v-show="accountWay === index" class="choose-tick">
+                      <img src="../../../static/order/tick.png" alt="" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="uploadPic">
+              <div class="up">
+                <el-upload
+                  :class="{hide:hideUpload}"
+                  action="#"
+                  :before-upload="beforeUpload"
+                  list-type="picture-card"
+                  :on-preview="handlePictureCardPreview"
+                  :on-remove="handleRemove"
+                  :limit="1"
+                  :on-change = "onchange"
+                  >
+                  <i class="el-icon-plus"></i>
+                  <div class="up-text">{{ $t(`${lang}.pleaseSelectAccount`) }}</div>
+                </el-upload>
+                <el-dialog :visible.sync="dialogVisible">
+                  <img width="100%" :src="dialogImageUrl" alt="">
+                </el-dialog>
+              </div>
+              <div class="tip">
+                {{ $t(`${lang}.Note1`) }}
+              </div>
+            </div>
+            <div class="transactionNum">
+              <div class="num-input">
+                <input type="text" v-model="payNumber" :placeholder="$t(`${lang}.PayTransactionNumber`)">
+              </div>
+            </div>
+            <div class="btnPay">
+              <div class="cancel-pay" @click="Cancel">{{ $t(`${lang2}.CancelPayment`) }}</div>
+              <div class="finish-pay" @click="Finished">{{ $t(`${lang2}.PaymentCompleted`) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 微信二维码弹窗 -->  
+    <div v-show="showEwm" class="qr_wrap">
+      <div class="msg">
+        <div class="msgbox">
+          <div class="content">
+            <img class="wx" src="../../../static/common/wchat.jpg" alt="">
+            <div class="close" @click="shut"><i class="el-icon-close"></i></div>
+            <div class="qrcode-box">
+              <p class="mainTextColor">{{$t(`${lang2}.ScanCode`)}}</p>
+              <p class="money">{{ formatCoin(this.$store.state.coin) }} {{ formatMoney(ultimatelyPay) }}</p>
+              <div  id="qrcode"></div>
+            </div>
+          </div> 
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import single from '../../shopping-cart/goodsCss/single'
+import double from '../../shopping-cart/goodsCss/double'
+import madeUp from '../../shopping-cart/goodsCss/madeUp'
+import Address from '@/assets/js/address.js'
+import {  Email, RegMobile, RegTelephone, RegMobiles  } from '@/assets/js/require-lee.js'
+const lang = 'order'
+const langs = 'personal.account'
+const lang2 = `pay`
+const lang3 = 'invoice'
+export default {
+  name: 'Stranger',
+  components: {
+    single,
+    double,
+    madeUp
+  },
+  mixins: [Address],
+  data() {
+    return {
+      checked:false,
+      texsum:0,
+      aa:this.$t(`${lang3}.PaperInvoice`),
+      bb:this.$t(`${lang3}.ElectronicInvoice`),
+      iconShow:false,
+      invoiceBox:false,
+      invoiceRise:'',
+      invoiceCode:'',
+      gou:false,
+      content:true,
+      selectStatus:0,
+      radio:'',
+      redioShow:false,
+      typeShow:false,
+      taxShow:false,
+      isactive:true,
+      Active:false,
+      emailShow:false,
+      mailShow:false,
+      language:this.$store.state.language,
+      // invoice_type:'',
+      // invoice_title:'',
+      // tax_number:'',
+      // is_electronic:"0",
+      lang,
+      langs,
+      lang2,
+      lang3,
+      pathTakeIds: this.$route.query.cartIds.split(','),
+      canSubmit: false,
+      address: [],
+      addressMore: false,
+      orderAddress:{email:''},
+      newAddress: true,
+      isEdit: false,
+      noWay: false,
+      addressBox:false,
+      addressData: {
+        lastname: '',
+        firstname: '',
+        mobile: '',
+        email: '',
+        checkEmail: '',
+        address_details: '',
+        zip_code: '',
+        odMail: '',
+        remark: ''
+      },
+      borderChange: 0,
+      wrongInput: {
+        firstName: false,
+        lastName: false,
+        userTel: false,
+        userMail: false,
+        checkEmail: false,
+        address: false,
+        zipCode: false,
+        odMail: false,
+        remark: false
+      },
+      confirmBox: false,
+      deleteAddressId: null,
+      wrongMsg: '',
+      alertBox: false,
+      good: [],
+      isToo: false,
+      die: false,
+      tooInp: '',
+      makeGay: false,
+      fuckYou: false,
+      familyDie: ``,
+      isSameEmail: false,
+      orderEmail: '',
+      remark: '',
+      goodsPrice: 0,
+      preferFee: 0,
+      tex: {
+        logisticsFee: 0,
+        taxFee: 0,
+        safeFee: 0,
+        orderAmount: 0,
+        planDays: '',
+        priceHKD:0,
+        coinType:''
+      },
+      planDays: '5-12',
+      invoice:{
+        invoice_type: 2,
+        invoice_title:'',
+        tax_number:'',
+        is_electronic:"0",
+        email:''
+      },
+      scrollTop: 0,
+      areaId : this.$store.state.areaId,
+      ifShowAddCard: false,
+      cardList: [],
+      useAmount: [],
+      cardType: 1,
+      goodsListLine: [],
+      orderTotalAmount: 0,
+      ultimatelyPay: 0,
+      coinType:'',
+      num: 0,
+      mobileMax: 20,
+      currency: '',
+      platform: this.$store.state.platform,
+      addressIdx: 0,
+      delIdx: -2,
+      couponCodeR: {
+        couponId: ''
+      },
+      showUseCoupon: false,
+      // 所有可有优惠券
+      couponAll: [],
+      // 已领取优惠券
+      couponAlready: [],
+      ifShowCoupon: false,
+      productCount:'',
+      coinTypes:{
+        coin:''
+      },
+      invoices:{},
+      url:'',
+      show:false,
+      goingPay: false,
+      payWay: 6 ,
+      payWayCn:2,
+      actionLink: '',
+      form: [],
+      answer: false,
+      failedOrder: false,
+      orderSn: this.$route.query.orderId,
+      userInfo: {},
+      isAllPack: false,
+      coinHKD:"HKD",
+      is_electronic:'',
+      isLogin:this.$store.getters.hadLogin,
+      loginType: 2,
+      qrcodeObj: {}, // 二维码配置
+      ewm:'',
+      showEwm:false, //是否显示二维码弹窗
+      interval:null,
+      addr:{},
+      order_sn:'',
+      showAddress:true,
+      SubmitPayment:false,
+      addAddress:true,
+      transfer:false,
+      fileList: {},
+      dialogImageUrl: '',
+      imgs:'',
+      account:'',
+      payNumber:'',
+      dialogVisible: false,
+      hideUpload: false,
+      accountlist:[],
+      accountWay: 0,
+      coinType:this.$store.state.coin,
+      transferOrderId:'',
+      ifShowLayer:false
+    }
+  },
+  watch:{
+    remark(){
+      this.texsum = this.remark.length;
+    }
+    // email(){
+    //   if(!(/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/)){
+    //     this.emailShow=true
+    //   }else{
+    //     this.emailShow=false
+    //     this.isActivemail=false
+    //   }
+    // },
+  },
+  computed: {
+    pnN() {
+      if (this.$store.state.language === 'en_US') {
+        return this.phoneNum.en
+      }else if(this.$store.state.language === 'zh_TW'){
+        return this.phoneNum.cn
+      }else
+        return this.phoneNum.zh
+        // console.log("代码",this.phoneNum.zh)
+    },
+    psn() {
+      return this.$store.state.language === 'en_US'
+    },
+    showOrderAmount() {
+      let result = '--'
+      console.log('this.tex=====>', this.tex)
+      if (this.tex.order_amount === null) {
+        result = this.formatMoney(this.goodsPrice)
+      } else if (typeof this.tex.order_amount === 'number') {
+        result = this.formatMoney(this.tex.order_amount)
+      } else {
+        result = '--'
+      }
+      return result
+    },
+    objectIfEmpty(){
+      return function(e) {
+        if(typeof(e) == 'object'){
+          for(var i in e){
+            return i
+          }
+        }else{
+          return false
+        }
+      }
+    },
+    code(){
+      return this.ewm
+    }
+  },
+  created() {
+    // console.log('this.pathTakeIds',this.pathTakeIds)
+    // console.log("planDays",this.tex.planDays)
+    if(this.payWayCn == 1){
+      //实现轮询
+      this.interval = window.setInterval(() => {
+        setTimeout(this.payVerify(), 0);
+      }, 3000);
+    }
+    const promise = new Promise((resolve, reject) => {
+      this.$store
+        .dispatch(`getCartGoodsByCartId`, this.pathTakeIds)
+        .then(res => {
+          this.$store.dispatch('setLocalCartOrder',this.pathTakeIds)
+          this.$store.dispatch('setLocalOrder',res)
+          // console.log(`good22222======>`, res)
+          this.good = res
+          this.goodsPrice = 0
+          for (const i in res) {
+            // console.log("fffff",res[i])
+            this.goodsPrice += res[i].price
+          }
+          this.tex.orderAmount = this.goodsPrice
+          resolve()
+        })
+        .catch(err => {
+          if (!err.response) {
+            this.$message.error(err.message)
+          } else {
+            // console.log(err)
+          }
+          resolve()
+        })
+    })
+    promise
+      .then(() => {
+        this.getTex()
+      })
+      .catch(err => {
+        if (!err.response) {
+          this.$message.error(err.message)
+        } else {
+          // console.log(err)
+        }
+      })
+  },
+  beforeDestroy() {
+    if(this.payWayCn == 1){
+      //清除轮询   
+      clearInterval(this.interval)
+      this.interval = null
+    }
+  },
+  mounted() {
+    console.log("sdsdsd",this.countryList)
+    this.language = this.$store.state.language
+    window.addEventListener('scroll', this.scrollToTop);
+
+    this.defaultAddress()
+    this.getAddress()
+    if(this.orderSn){
+      this.showAddress = false
+      this.SubmitPayment = true
+      if(this.address.length > 0){
+        this.addressBox = true
+      }
+    }
+
+    this.getAccount()
+
+    // 大陆站点 登录方式为手机登录
+    if(this.$store.state.platform == 20){
+      this.loginType = 1;
+    }else{
+      if(this.language == "zh_CN"){
+        this.loginType = 1
+      }else{
+        this.loginType = 2;
+      }
+    }
+
+    fbq('track', 'InitiateCheckout');
+  },
+  destroyed() {
+    window.removeEventListener('scroll', this.scrollToTop)
+  },
+  methods: {
+    // 获取电汇账户信息
+    getAccount(){
+      this.$axios
+        .get('/web/pay/collection-account-info')
+        .then(res => {
+          this.accountlist = res.data
+          this.account = res.data[0].account
+        })
+        .catch(err => {
+          this.$message.error(err.message)
+      })
+    },
+    // 选择账户
+    changeWay(ind) {
+      this.account = this.accountlist[ind].account
+      this.accountWay = ind
+    },
+    // 上传图片
+    beforeUpload(file) {
+      // jpeg,bmp,jpg,png,tif,gif,pcx,tga,exif,fpx,svg,psd,cdr,pcd,dxf,ufo,eps,ai,raw,WMF,webp
+      const isJPG =
+        file.type == 'image/jpeg'||
+        file.type == 'image/png'||
+        file.type == 'image/jpg'||
+        file.type == 'image/gif'||
+        file.type == 'image/tiff'||
+        file.type == 'image/raw'||
+        file.type == 'image/pcx'||
+        file.type == 'image/tga'||
+        file.type == 'image/exif'||
+        file.type == 'image/fpx'||
+        file.type == 'image/svg'||
+        file.type == 'image/psd'||
+        file.type == 'image/cdr'||
+        file.type == 'image/pcd'||
+        file.type == 'image/dxf'||
+        file.type == 'image/ufo'||
+        file.type == 'image/eps'||
+        file.type == 'image/ai'||
+        file.type == 'image/WMF'||
+        file.type == 'image/webp'||
+        file.type == 'image/bmp';
+        const isLt2M = file.size / 1024 / 1024 < 2;
+
+        if (!isJPG) {
+          this.$message.error(this.$t(`${lang2}.imgFomat`));
+          return isJPG
+        }
+        if (!isLt2M) {
+          this.$message.error(this.$t(`${lang2}.imgSize`));
+          return isLt2M
+        }
+        // return isJPG && isLt2M;
+        var fd = new window.FormData();
+        fd.append('file', file, file.name)
+        this.$axios.post("/web/file/images",fd)
+        .then(res => {
+          this.imgs = res.data.url
+          //  return res.data.url
+        });
+        // return false // 返回false不会自动上传 imgFomat
+    },
+    // 取消付款
+    Cancel(){
+      this.payWay = 6
+      this.transfer = false
+    },
+
+    // 删除图片
+    handleRemove(file, fileList) {
+      // console.log("删除了")
+      this.imgs = ''
+      if(fileList == ''){
+        setTimeout(() => {
+          this.hideUpload = false
+        }, 500);
+      }
+    },
+    // 放大图片
+    handlePictureCardPreview(file) {
+      this.dialogImageUrl = file.url;
+      this.dialogVisible = true;
+    },
+    // 上传图片是触发的方法
+    onchange(fileList){
+      if(fileList !==''){
+        this.hideUpload = true
+      }
+    }, 
+    // 关闭提交电汇信息弹窗
+    closed(){
+      this.payWay = 6
+      this.transfer = false
+    },
+    // 确认支付按钮触发
+    confirmPayment(){
+      //  || this.addAddress == true
+      console.log("sdsdsds",this.addAddress)
+      const topB = document.getElementsByClassName('layout-box')[0];
+      const that = this
+      let timer = setInterval(() => {
+        let ispeed = Math.floor(-that.scrollTop / 5)
+        topB.scrollTop = that.scrollTop + ispeed
+        if (that.scrollTop === 0) {
+          clearInterval(timer)
+        }
+      }, 22)
+      // 【499】
+      if(this.addAddress == true && this.address.length > 0){
+        this.$errorMessage(this.$t(`${lang}.msg13`)) 
+        const topB = document.getElementsByClassName('layout-box')[0];
+        const that = this
+        let timer = setInterval(() => {
+          let ispeed = Math.floor(-that.scrollTop / 5)
+          topB.scrollTop = that.scrollTop + ispeed
+          if (that.scrollTop === 0) {
+            clearInterval(timer)
+          }
+        }, 22)
+        return
+      }
+
+      if(this.address.length == 0){
+        this.$errorMessage(this.$t(`${lang}.msg4`)) 
+        
+        return
+      }
+      this.showAddress = false
+      this.SubmitPayment = true
+    },
+    // 获取地址
+    getAddress(){
+      let Addr = JSON.parse(localStorage.getItem("myAddress") || '[]')
+      this.address = Addr
+      if(this.address.length > 0){
+        this.addressBox = true
+        this.addAddress = false
+      }
+    },
+    // 点击提示修改地址确认按钮触发
+    alertTipBox(){
+      this.alertBox = false
+      if(this.isEdit){
+        // 点击修改滚顶到地址选择模块
+        document.getElementById('step').scrollIntoView({
+          block: 'center',
+          inline: 'nearest',
+          behavior: 'smooth'
+        })
+      }
+    },
+    resetAddressInp() {
+      // this.phoneNum = this.phoneJson[0]
+      this.addressData = {
+        lastname: '',
+        firstname: '',
+        mobile: '',
+        email: '',
+        checkEmail: '',
+        address: '',
+        zipCode: '',
+        odMail: '',
+        remark: ''
+      }
+      this.wrongInput = {
+        firstname: false,
+        lastname: false,
+        mobile: false,
+        email: false,
+        checkEmail: false,
+        address: false,
+        zipCode: false,
+        odMail: false,
+        remark: false
+      }
+      this.resetAddress()
+    },
+    // 修改地址按钮触发
+    changeAddress(l) {
+      this.addressIdx = l;
+      
+      // var k = [];
+      // if(this.cardList){
+      //   k = this.cardList
+      // }
+      // this.getTex(k)
+    },
+    // 设置默认地址
+    setDefaultAddr(obj) {
+      const setDefaultData = this.$helpers.cloneObject(obj)
+      const data = this.$helpers.transformRequest(
+        JSON.parse(
+          JSON.stringify({
+            id: setDefaultData.id,
+            is_default: 1
+          })
+        ),
+        false
+      )
+    },
+    // 简体创建地址
+    createAddressCn() {
+      // console.log(1111,this.countryList ,this.provinceList,this.cityList)
+      // console.log('create')  /[^\d]/g,''
+      if (this.addressData.lastname === '') {
+        this.wrongMsg = this.$t(`${lang}.wip6`)
+        this.alertBox = true
+        this.wrongInput.lastname = true
+        return false
+      }
+      if (this.addressData.firstname === '') {
+        this.wrongMsg = this.$t(`${lang}.wip8`)
+        this.alertBox = true
+        this.wrongInput.firstname = true
+        return false
+      }
+      if(this.phoneNum.phone_code == '+86'){
+        if (!RegMobiles.test(this.addressData.mobile)) {
+          this.wrongMsg = this.$t(`${lang}.wip2`)
+          this.alertBox = true
+          this.wrongInput.mobile = true
+          return false
+        }
+      }
+      if (!RegTelephone.test(this.addressData.mobile)) {
+        this.wrongMsg = this.$t(`${lang}.wip2`)
+        this.alertBox = true
+        this.wrongInput.mobile = true
+        return false
+      }
+     
+      if (!this.country.areaId) {
+        this.wrongMsg = this.$t(`${lang}.wip4`)
+        this.alertBox = true
+        return false
+      }
+      if(this.provinceList.length >2){
+        if (!this.province.areaId) {
+          this.wrongMsg = this.$t(`${lang}.wip10`)
+          this.alertBox = true
+          return false
+        }
+      }
+      if(this.cityList.length > 1 && this.city.areaId == 0){
+        this.wrongMsg = this.$t(`${lang}.wip11`)
+        this.alertBox = true
+        return false
+      }
+      if (!this.addressData.address_details) {
+        this.wrongMsg = this.$t(`${lang}.wip5`)
+        this.alertBox = true
+        this.wrongInput.address_details = true
+        return false
+      }
+      const data = {
+        firstname: this.addressData.firstname,
+        lastname: this.addressData.lastname,
+        mobile_code: this.phoneNum.phone_code,
+        mobile: this.addressData.mobile,
+        email: this.addressData.email,
+        country_name: this.country.areaName,
+        province_name: this.province.areaName,
+        city_name: this.city.areaName,
+        country_id: this.country.areaId,
+        province_id: this.province.areaId,
+        city_id: this.city.areaId,
+        address_details: this.addressData.address_details,
+        zip_code: this.addressData.zip_code
+      }
+
+      if(this.address.length > 0){
+        this.addressIdx = 1
+      }else{
+        this.addressIdx = 0
+      }
+      
+      this.addressBox = true
+      this.newAddress = false
+      this.addr = data
+      this.address.push(data)
+      localStorage.setItem("myAddress", JSON.stringify(this.address)); 
+      this.$successMessage(this.$t(`${lang}.prompt1`))
+       this.addAddress = false
+      console.log(this.address)
+      // this.resetAddressInp()
+    },
+    // 点击修改按钮
+    changeAddressInfo(obj) {
+      // 点击修改滚顶到地址编辑模块
+      document.getElementById('addbox').scrollIntoView({
+        block: 'center',
+        inline: 'nearest',
+        behavior: 'smooth'
+      })
+
+      this.wrongMsg = '';
+      this.wrongInput = {
+        firstname: false,
+        lastname: false,
+        mobile: false,
+        email: false,
+        checkEmail: false,
+        address: false,
+        zipCode: false,
+        odMail: false,
+        remark: false
+      }
+
+      // console.log('需要修改的对象：', obj);
+      this.isEdit = true
+      this.addAddress = true
+      const data = this.$helpers.cloneObject(obj)
+      if(data.zip_code == null){
+        data.zip_code = ''
+      }
+      this.addressData = {
+        id: data.id,
+        firstname: data.firstname,
+        lastname: data.lastname,
+        mobile: data.mobile,
+        email: data.email,
+        checkEmail: data.email,
+        country_id: data.country_id,
+        province_id: data.province_id,
+        city_id: data.city_id,
+        address_details: data.address_details,
+        zip_code: data.zip_code
+      }
+      // console.log("code",this.addressData)
+      const code = data.mobile_code.split('+').reverse()
+      JSON.parse(JSON.stringify(this.phoneJson)).forEach(o => {
+        if (o.phone_code === '+' + code[0]) {
+          this.phoneNum = o
+        }
+      })
+
+      const setAddr = new Promise((resolve, reject) => {
+        this.setAddress(data)
+        resolve()
+      })
+      setAddr.then(() => {
+        // console.log('赋值后的B：', this.addressData);
+      })
+    },
+    // 简体保存地址
+    saveAddressCn() {
+      if (this.addressData.lastname === '') {
+        this.wrongMsg = this.$t(`${lang}.wip6`)
+        this.alertBox = true
+        this.wrongInput.lastname = true
+        return false
+      }
+      if (this.addressData.firstname === '') {
+        this.wrongMsg = this.$t(`${lang}.wip8`)
+        this.alertBox = true
+        this.wrongInput.firstname = true
+        return false
+      }
+      if(this.phoneNum.phone_code == '+86'){
+        if (!RegMobiles.test(this.addressData.mobile)) {
+          this.wrongMsg = this.$t(`${lang}.wip2`)
+          this.alertBox = true
+          this.wrongInput.mobile = true
+          return false
+        }
+      }
+      if (!RegTelephone.test(this.addressData.mobile)) {
+        this.wrongMsg = this.$t(`${lang}.wip2`)
+        this.alertBox = true
+        this.wrongInput.mobile = true
+        return false
+      }
+      if (!this.country.areaId) {
+        this.wrongMsg = this.$t(`${lang}.wip4`)
+        this.alertBox = true
+        return false
+      }
+      if(this.provinceList.length >2){
+        if (!this.province.areaId) {
+          this.wrongMsg = this.$t(`${lang}.wip10`)
+          this.alertBox = true
+          return false
+        }
+      }
+
+      if(this.cityList.length > 1 && this.city.areaId == 0){
+        this.wrongMsg = this.$t(`${lang}.wip11`)
+        this.alertBox = true
+        return false
+      }
+
+      if (!this.addressData.address_details) {
+        this.wrongMsg = this.$t(`${lang}.wip5`)
+        this.alertBox = true
+        this.wrongInput.address_details = true
+        return false
+      }
+      if(this.city.areaId == ''){
+        this.city.areaId = '0'
+      }
+      let content= []
+      const data = {
+        id: this.addressData.id,
+        firstname: this.addressData.firstname,
+        lastname: this.addressData.lastname,
+        mobile_code: this.phoneNum.phone_code,
+        mobile: this.addressData.mobile,
+        email: this.addressData.email,
+        country_id: this.country.areaId,
+        province_id: this.province.areaId,
+        city_id: this.city.areaId,
+        country_name: this.country.areaName,
+        province_name: this.province.areaName,
+        city_name: this.city.areaName,
+        address_details: this.addressData.address_details,
+        zip_code: this.addressData.zip_code
+      }
+      this.addr = data
+      content.push(data)
+      this.addressBox = true
+      this.newAddress = false
+      this.address = content
+      this.addAddress = false
+      localStorage.setItem("myAddress", JSON.stringify(this.address));
+      this.$successMessage(this.$t(`${lang}.prompt2`))
+      console.log('this.address',this.addAddress)
+
+    },
+    // 繁体创建地址
+    createAddressEn() {
+      if (this.addressData.firstname === '') {
+        this.wrongMsg = this.$t(`${lang}.wip8`)
+        this.alertBox = true
+        this.wrongInput.firstname = true
+        return false
+      }
+      if (this.addressData.lastname === '') {
+        this.wrongMsg = this.$t(`${lang}.wip6`)
+        this.alertBox = true
+        this.wrongInput.lastname = true
+        return false
+      }
+      if (this.addressData.mobile === '') {
+        this.wrongMsg = this.$t(`${lang}.wip2`)
+        this.alertBox = true
+        this.wrongInput.mobile = true
+        return false
+      }
+      if(this.phoneNum.phone_code == '+86'){
+        if (!RegMobiles.test(this.addressData.mobile)) {
+          this.wrongMsg = this.$t(`${lang}.wip2`)
+          this.alertBox = true
+          this.wrongInput.mobile = true
+          return false
+        }
+      }
+      if (!RegMobile.test(this.addressData.mobile)) {
+        this.wrongMsg = this.$t(`${lang}.wip2`)
+        this.alertBox = true
+        this.wrongInput.mobile = true
+        return false
+      }
+      if (!Email.test(this.addressData.email)) {
+        this.wrongMsg = this.$t(`${lang}.wip3`)
+        this.alertBox = true
+        this.wrongInput.email = true
+        return false
+      }
+      if (this.addressData.email !== this.addressData.checkEmail) {
+        this.wrongMsg = this.$t(`${lang}.wip3`)
+        this.alertBox = true
+        this.wrongInput.checkEmail = true
+        return false
+      }
+      if (!this.country.areaId) {
+        this.wrongMsg = this.$t(`${lang}.wip4`)
+        this.alertBox = true
+        return false
+      }
+      if(this.provinceList.length >2){
+        if (!this.province.areaId) {
+          this.wrongMsg = this.$t(`${lang}.wip10`)
+          this.alertBox = true
+          return false
+        }
+      }
+      if(this.cityList.length > 1 && this.city.areaId == 0){
+        this.wrongMsg = this.$t(`${lang}.wip11`)
+        this.alertBox = true
+        return false
+      }
+      if (!this.addressData.address_details) {
+        this.wrongMsg = this.$t(`${lang}.wip5`)
+        this.alertBox = true
+        this.wrongInput.address_details = true
+        return false
+      }
+      const data = {
+        firstname: this.addressData.firstname,
+        lastname: this.addressData.lastname,
+        mobile_code: this.phoneNum.phone_code,
+        mobile: this.addressData.mobile,
+        email: this.addressData.email,
+        country_name: this.country.areaName,
+        province_name: this.province.areaName,
+        city_name: this.city.areaName,
+        country_id: this.country.areaId,
+        province_id: this.province.areaId,
+        city_id: this.city.areaId,
+        address_details: this.addressData.address_details,
+        zip_code: this.addressData.zip_code
+      }
+
+      this.addressBox = true
+      this.newAddress = false
+      this.addr = data
+      this.address.push(data)
+      localStorage.setItem("myAddress", JSON.stringify(this.address));
+      this.$successMessage(this.$t(`${lang}.prompt1`))
+       this.addAddress = false
+      // console.log(this.address)
+    },
+    // 繁体保存地址
+    saveAddressEn() {
+      // console.log('save')
+      if (this.addressData.firstname === '') {
+        this.wrongMsg = this.$t(`${lang}.wip8`)
+        this.alertBox = true
+        this.wrongInput.firstname = true
+        return false
+      }
+      if (this.addressData.lastname === '') {
+        this.wrongMsg = this.$t(`${lang}.wip6`)
+        this.alertBox = true
+        this.wrongInput.lastname = true
+        return false
+      }
+      if (this.addressData.mobile === '') {
+        this.wrongMsg = this.$t(`${lang}.wip2`)
+        this.alertBox = true
+        this.wrongInput.mobile = true
+        return false
+      }
+      if(this.phoneNum.phone_code == '+86'){
+        if (!RegMobiles.test(this.addressData.mobile)) {
+          this.wrongMsg = this.$t(`${lang}.wip2`)
+          this.alertBox = true
+          this.wrongInput.mobile = true
+          return false
+        }
+      }
+      if (!RegMobile.test(this.addressData.mobile)) {
+        this.wrongMsg = this.$t(`${lang}.wip2`)
+        this.alertBox = true
+        this.wrongInput.mobile = true
+        return false
+      }
+      if (!Email.test(this.addressData.email)) {
+        this.wrongMsg = this.$t(`${lang}.wip3`)
+        this.alertBox = true
+        this.wrongInput.email = true
+        return false
+      }
+      if (this.addressData.email !== this.addressData.checkEmail) {
+        this.wrongMsg = this.$t(`${lang}.wip3`)
+        this.alertBox = true
+        this.wrongInput.checkEmail = true
+        return false
+      }
+      if (!this.country.areaId) {
+        this.wrongMsg = this.$t(`${lang}.wip4`)
+        this.alertBox = true
+        return false
+      }
+      if(this.provinceList.length >2){
+        if (!this.province.areaId) {
+          this.wrongMsg = this.$t(`${lang}.wip10`)
+          this.alertBox = true
+          return false
+        }
+      }
+      if(this.cityList.length > 1 && this.city.areaId == 0){
+        this.wrongMsg = this.$t(`${lang}.wip11`)
+        this.alertBox = true
+        return false
+      }
+      if (!this.addressData.address_details) {
+        this.wrongMsg = this.$t(`${lang}.wip5`)
+        this.alertBox = true
+        this.wrongInput.address_details = true
+        return false
+      }
+      if(this.city.areaId == ''){
+        this.city.areaId = '0'
+      }
+
+      let content= []
+      const data = {
+        id: this.addressData.id,
+        firstname: this.addressData.firstname,
+        lastname: this.addressData.lastname,
+        mobile_code: this.phoneNum.phone_code,
+        mobile: this.addressData.mobile,
+        email: this.addressData.email,
+        country_id: this.country.areaId,
+        province_id: this.province.areaId,
+        city_id: this.city.areaId,
+        country_name: this.country.areaName,
+        province_name: this.province.areaName,
+        city_name: this.city.areaName,
+        address_details: this.addressData.address_details,
+        zip_code: this.addressData.zip_code
+      }
+      this.addr = data
+      content.push(data)
+      this.addressBox = true
+      this.newAddress = false
+      this.address = content
+      this.addAddress = false
+      localStorage.setItem("myAddress", JSON.stringify(this.address));
+      this.$successMessage(this.$t(`${lang}.prompt2`))
+      // console.log('this.address',content, this.address)
+
+    },
+    // 删除地址
+    deleteAddress() {
+      localStorage.removeItem("myAddress");
+      this.isEdit = false
+      this.confirmBox = false
+      this.newAddress = true
+      this.addressBox = false
+      this.addAddress = true
+      this.resetAddressInp()
+      this.address = []
+      this.$errorMessage(this.$t(`${lang}.prompt3`))
+      // console.log("gsgdggg",this.address)
+    },
+    keydown(){
+      var reg = /^[0-9a-zA-Z\-]{1}$/;
+      var k = this.addressData.zip_code.slice(-1);
+      if(!reg.test(k)){
+        this.addressData.zip_code = this.addressData.zip_code.slice(0,-1)
+      }
+    },
+    mobileIpt(){
+      if(this.pnN == '中国' || this.pnN == '中國' || this.pnN == 'China'){
+        this.mobileMax = 11
+      }else{
+        this.mobileMax = 20
+      }
+    },
+    // 选择纸质发票
+    zhizhi(or){
+      this.invoice.is_electronic = or;
+      this.isactive = true
+      this.Active = false
+    },
+    // 选择电子发票
+    dianzi(or){
+      this.invoice.is_electronic = or;
+      this.isactive = false
+      this.Active = true
+    },
+    handle(){
+      // console.log("取到的值是"+this.radio);
+    },
+    close(){
+      this.invoiceBox = false
+      this.iconShow = false
+    },
+    show2(){
+      this.iconShow=!this.iconShow
+      this.invoice.is_electronic = 0
+
+      if(this.iconShow == true){
+        this.invoiceBox = true
+        this.content = true
+      }else{
+        this.invoiceBox = false
+        this.content = false
+      }
+    },
+    confirm(){
+      if(this.invoice.invoice_type == ''){
+        this.redioShow = true
+        return
+      }
+      if(this.invoice.invoice_title == ''){
+        this.typeShow = true
+        return
+      }
+      if(this.invoice.invoice_type == 1){
+        if(this.invoice.tax_number == ''){
+          this.taxShow = true
+          return
+        }
+      }
+      if(this.invoice.is_electronic == 1){
+        if(this.invoice.email == '' || !(/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/.test(this.invoice.email))){
+          this.mailShow = true
+          return
+        }
+      }
+
+      this.gou = true
+      this.content = false
+      setTimeout(() => {
+        this.content = false
+        this.gou = false
+        this.invoiceBox = false
+      }, 1000);
+    },
+    complete(){
+      this.invoiceBox = false
+    },
+    login(){
+      this.$emit('login', true)
+    },
+    register(){
+      let oldurl=window.location.pathname
+      let params=window.location.search
+      //如果是订单确认页面，返回到购物车
+      if((/^\/billing-address/).test(oldurl)){
+          oldurl = '/shopping-cart'
+          params = ''
+      }
+      console.log(oldurl);
+      const url=oldurl+params
+      localStorage.setItem('url',url)
+      sessionStorage.setItem("loginType", this.loginType)
+      setTimeout(() => {
+        this.$router.push({
+            path: `/login?type=register`,
+            // query: {url}
+        })
+      },0)
+    },
+    Way(ways){
+      this.payWay=ways
+      this.payWayCn=ways
+      console.log("payway",ways)
+      // if(ways==6||ways==61){
+      //   this.show=false
+      // }else{
+      //   this.login()
+      // }
+    },
+    fuckYouM() {
+      if (this.tooInp.trim() === '') {
+        this.fuckYou = false
+      } else {
+        this.fuckYou = true
+      }
+    },
+    removeCoupon() {
+      this.tooInp = ''
+      this.makeGay = false
+      this.preferFee = 0
+      this.fuckYou = false
+    },
+    // 获取税费
+    getTex() {
+      this.canSubmit = false;
+      let json=[];
+      let arr = [];
+      for (const i in this.good) {
+        let group = this.good[i].data
+        let item = group.map(item => {
+          if(item.coupon.hasOwnProperty('discount')){
+            arr[i] = item.coupon.discount.coupon_id
+          }else{
+            arr[i] = ''
+          }
+          return {
+            createTime: item.createTime || new Date().getTime(),
+            goods_num: item.goodsCount,
+            goodsDetailsId: item.goodsDetailsId,
+            goods_id: item.goodsDetailsId,
+            group_id: item.groupId || null,
+            group_type:item.groupType,
+            goods_type: item.goodsType,
+            coupon_id: arr[i]
+          }
+        })
+
+        json = json.concat(item)
+      }
+      if(json.length){
+        this.$axios
+          .post('/web/member/order-tourist/tax', {
+              goodsCartList:json
+            })
+          .then(res => {
+            this.canSubmit = true
+            this.tex = res.data
+            this.tex.priceHKD = res.data.order_amount_HKD
+            this.tex.coinType = res.data.currency
+            this.ultimatelyPay = res.data.pay_amount;
+          })
+          .catch(err => {
+            this.canSubmit = false
+            this.$message.error(err.message)
+            // this.tex = {
+            //   logisticsFee: 0,
+            //   taxFee: 0,
+            //   safeFee: 0,
+            //   orderAmount: null,
+            //   planDays: '--'
+            // }
+            if (!err.response) {
+              this.$message.error(err.message)
+            } else {
+              // console.log(err)
+            }
+          })
+      }else{
+        this.$message.error(this.$t(`${lang}.msg10`));
+        var that = this;
+        var timer = setTimeout(function(){
+          that.$router.replace('/shopping-cart');
+          clearTimeout(timer)
+        },2000)
+      }
+    },
+    // 其他支付创建订单并支付
+    createOrder() {
+      let pay = 0
+      if(this.payWay==6){
+        pay = 6   //paypal(香港站，美国站，台湾站)
+      }else if(this.payWay==61){
+        pay = 61  //visa(香港站，美国站，台湾站)
+      }else if(this.payWay==81){
+        pay = 81  //银联
+      }else if(this.payWay==2){
+        pay = 2   //支付宝(大陆站)
+      }else if(this.payWay==83){
+        pay = 83  //微信HK(香港站)
+      }else if(this.payWay==1){
+        pay = 1   //微信(大陆站)
+      }else if(this.payWay==84){
+        pay = 84  //支付宝HK(香港站)
+      }else if(this.payWay==11){
+        pay = 11  //电汇(香港站，台湾站)
+      }
+
+      if(this.payWay==''){
+        this.$errorMessage(this.$t(`${lang}.msg9`))
+        const topB = document.getElementsByClassName('layout-box')[0];
+        const that = this
+        let timer = setInterval(() => {
+          let ispeed = Math.floor(-that.scrollTop / 5)
+          topB.scrollTop = that.scrollTop + ispeed
+          if (that.scrollTop === 0) {
+            clearInterval(timer)
+          }
+        }, 22)
+        return
+      }
+
+      // if(this.payWay !=6 && this.payWay != 61){
+      //   this.$emit('login', true)
+      //   return
+        
+        // this.$errorMessage(this.$t(`${lang}.firstLogin`))
+
+        // const topB = document.getElementsByClassName('layout-box')[0];
+        // const that = this
+        // let timer = setInterval(() => {
+        //   let ispeed = Math.floor(-that.scrollTop / 5)
+        //   topB.scrollTop = that.scrollTop + ispeed
+        //   if (that.scrollTop === 0) {
+        //     clearInterval(timer)
+        //   }
+        // }, 22)
+        // return
+      // }
+
+      for (let i = 0; i < this.address.length; i++) { 
+        this.addr= this.address[i]
+      }
+      if(JSON.stringify(this.addr) == "{}"|| this.address==''){
+        this.$errorMessage(this.$t(`${lang}.msg4`)) 
+        const topB = document.getElementsByClassName('layout-box')[0];
+        const that = this
+        let timer = setInterval(() => {
+          let ispeed = Math.floor(-that.scrollTop / 5)
+          topB.scrollTop = that.scrollTop + ispeed
+          if (that.scrollTop === 0) {
+            clearInterval(timer)
+          }
+        }, 22)
+        return
+      }
+
+
+      let baseUrl=this.$store.getters.baseUrl
+      let invoice = {}
+      let json=[]
+      let arr = [];
+
+      for (const i in this.good) {
+        let group = this.good[i].data
+        let item = group.map(item => {
+          if(item.coupon.hasOwnProperty('discount')){
+            arr[i] = item.coupon.discount.coupon_id
+          }else{
+            arr[i] = ''
+          }
+          for(var i in item.goodsAttr){
+            for(var j in item.goodsAttr[i]){
+              if(j == 'goodsId'){
+                item.goodsAttr[i]['goods_id'] = item.goodsAttr[i][j]//修改属性名为“title”
+                delete item.goodsAttr[i]['goodsId']//删除“name”
+              }
+              if(j == 'configId'){
+                item.goodsAttr[i]['config_id'] = item.goodsAttr[i][j]//修改属性名为“title”
+                delete item.goodsAttr[i]['configId']//删除“name”
+              }
+              if(j == 'configAttrId'){
+                item.goodsAttr[i]['config_attr_id'] = item.goodsAttr[i][j]//修改属性名为“title”
+                delete item.goodsAttr[i]['configAttrId']//删除“name”
+              }
+              if( item.goodsAttr[i]['goods_id'] == null){
+                delete item.goodsAttr[i]['goods_id']
+              }
+              delete item.goodsAttr[i]['configVal']
+              delete item.goodsAttr[i]['configAttrIVal']
+             
+            }
+          }
+          console.log("item",item)
+          return {
+            createTime: item.createTime || new Date().getTime(),
+            goods_num: item.goodsCount,
+            goodsDetailsId: item.goodsDetailsId,
+            goods_id: item.goodsDetailsId,
+            group_id: item.groupId || null,
+            group_type:item.groupType,
+            goods_type: item.goodsType,
+            coupon_id: arr[i],
+            goods_attr:item.goodsAttr,
+            lettering:item.lettering
+          }
+        })
+
+        json = json.concat(item)
+      }
+      console.log(this.iconShow)
+      if(this.iconShow ){
+        invoice = this.invoice
+      }
+      this.$axios({
+        method: 'post',
+        url: '/web/member/order-tourist/create',
+        data: {
+          orderSn:this.orderSn||this.transferOrderId,
+          goodsCartList:json,
+          address:this.addr,
+          invoice:invoice,
+          tradeType:'pc',
+          coinType:this.$store.state.coin,
+          payType: pay,
+          returnUrl:baseUrl+'/complete-paySuccess?order_sn={order_sn}',  //http://localhost:8318  http://www.bdd.bddia.com  https://www.bddco.com/complete-paySuccess
+          buyer_remark: this.remark,
+        }
+      })
+        .then(res => {
+          console.log('this.transferOrderId',res)
+          if(res.data.config){
+            window.location.replace(res.data.config)
+          }else if(res.data.order_sn){
+            // 选择电汇触发打开弹窗
+            this.transfer = true
+            this.transferOrderId = res.data.order_sn
+          }
+          // else {
+          //   this.$router.replace({
+          //     path: '/complete-paySuccess',
+          //     query: {
+          //       orderId: this.$route.query.orderId,
+          //       price: this.$route.query.price,
+          //       coinType: this.$route.query.coinType,
+          //       type: `transfer`
+          //     }
+          //   })
+          // }
+        })
+        .catch(err => {
+          if (!err.response) {
+            this.$message.error(err.message)
+          } else {
+            // console.log(err)
+          }
+        })
+    },
+    // 电汇完成付款
+    Finished(){
+      console.log('this.transferOrderId',this.transferOrderId)
+      // return
+      if(this.accountWay === ''){
+        this.$message.error(this.$t(`${lang2}.selectAccount`))
+        return
+      }
+      if(this.imgs === ''){
+        this.$message.error(this.$t(`${lang2}.selectVoucher`))
+        return
+      }
+      if(this.transferOrderId){
+        const data ={
+          order_sn: this.transferOrderId,
+          account:this.account,
+          payment_serial_number:this.payNumber,
+          payment_voucher:this.imgs
+        }
+        this.$axios
+          .post('/web/pay/wire-transfer',data)
+          .then(res => {
+            this.ifShowLayer = true
+            this.$successMessage(this.$t(`${lang2}.transferSuccessful`))
+            this.transfer = false
+            setTimeout(() => {
+              this.$router.replace({
+                path: '/',
+              })
+            }, 3000)
+          })
+          .catch(err => {
+            this.$message.error(err.message)
+        })
+      }
+    },
+     // 关闭二维码弹窗
+    shut(){
+      this.showEwm = false
+      clearInterval(this.interval)
+      this.interval = null
+    },
+    // 大陆支付
+    mainLandPay(){
+      if(this.$store.state.coin === 'USD'){
+        if(this.payWayCn == 2 || this.payWay == 83|| this.payWayCn == 1||this.payWay == 81||this.payWay == 84){
+          this.$errorMessage(this.$t(`${lang}.NotSupportPay`))
+          return
+        }
+      }
+
+      let pay = ""
+      if(this.payWayCn==6){
+        pay = 6
+      }else if(this.payWayCn==61){
+        pay = 61
+      }else if(this.payWayCn==81){
+        pay = 81
+      }else if(this.payWayCn==2){
+        pay = 2
+      }else if(this.payWayCn==83){
+        pay = 83
+      }else if(this.payWayCn==1){
+        pay = 1
+      }else if(this.payWayCn==84){
+        pay = 84
+      }
+      // console.log("方式",pay)
+      for (let i = 0; i < this.address.length; i++) { 
+        this.addr= this.address[i]
+      }
+      if(JSON.stringify(this.addr) == "{}"|| this.address==''){
+        this.$errorMessage(this.$t(`${lang}.msg4`)) 
+        const topB = document.getElementsByClassName('layout-box')[0];
+        const that = this
+        let timer = setInterval(() => {
+          let ispeed = Math.floor(-that.scrollTop / 5)
+          topB.scrollTop = that.scrollTop + ispeed
+          if (that.scrollTop === 0) {
+            clearInterval(timer)
+          }
+        }, 22)
+        return
+      }
+
+
+      let baseUrl=this.$store.getters.baseUrl
+      let invoice = {}
+      let json=[]
+      let arr = [];
+      let tradeType = ''
+      let data = {}
+
+      for (const i in this.good) {
+        let group = this.good[i].data
+        let item = group.map(item => {
+          if(item.coupon.hasOwnProperty('discount')){
+            arr[i] = item.coupon.discount.coupon_id
+          }else{
+            arr[i] = ''
+          }
+          for(var i in item.goodsAttr){
+            for(var j in item.goodsAttr[i]){
+              if(j == 'goodsId'){
+                item.goodsAttr[i]['goods_id'] = item.goodsAttr[i][j]//修改属性名为“title”
+                delete item.goodsAttr[i]['goodsId']//删除“name”
+              }
+              if(j == 'configId'){
+                item.goodsAttr[i]['config_id'] = item.goodsAttr[i][j]//修改属性名为“title”
+                delete item.goodsAttr[i]['configId']//删除“name”
+              }
+              if(j == 'configAttrId'){
+                item.goodsAttr[i]['config_attr_id'] = item.goodsAttr[i][j]//修改属性名为“title”
+                delete item.goodsAttr[i]['configAttrId']//删除“name”
+              }
+              if( item.goodsAttr[i]['goods_id'] == null){
+                delete item.goodsAttr[i]['goods_id']
+              }
+              delete item.goodsAttr[i]['configVal']
+              delete item.goodsAttr[i]['configAttrIVal']
+             
+            }
+          }
+          // console.log("item",item.goodsAttr)
+          return {
+            createTime: item.createTime || new Date().getTime(),
+            goods_num: item.goodsCount,
+            goodsDetailsId: item.goodsDetailsId,
+            goods_id: item.goodsDetailsId,
+            group_id: item.groupId || null,
+            group_type:item.groupType,
+            goods_type: item.goodsType,
+            coupon_id: arr[i],
+            goods_attr:item.goodsAttr,
+            lettering:item.lettering
+          }
+        })
+
+        json = json.concat(item)
+      }
+      console.log(this.iconShow)
+      if(this.iconShow ){
+        invoice = this.invoice
+      }
+
+      if(pay == 1){
+        data ={
+          goodsCartList:json,
+          address:this.addr,
+          orderSn:this.order_sn, 
+          invoice:invoice,
+          coinType: this.$store.state.coin,
+          payType: pay,
+          buyer_remark: this.remark,
+          tradeType:"native",
+          returnUrl:baseUrl+'/complete-paySuccess?order_sn={order_sn}'
+        }
+      } else{
+        data ={
+          orderSn:this.order_sn,
+          goodsCartList:json,
+          address:this.addr,
+          invoice:invoice,
+          coinType: this.$store.state.coin,
+          payType: pay,
+          buyer_remark: this.remark,
+          tradeType:"pc",
+          returnUrl:baseUrl+'/complete-paySuccess?order_sn={order_sn}'
+        }
+      }
+      this.goingPay = true
+      this.$axios
+        .post('/web/member/order-tourist/create', data)
+        .then(res => {
+          this.order_sn = res.data.order_sn
+          if(this.ewm == ''){
+            this.ewm = res.data.config
+          }
+          this.getEwm()
+          console.log("url",this.ewm)
+          if (res.data.config) {
+            if (pay !== 1) {
+              window.location.replace(res.data.config)
+            } else {
+              this.showEwm = true
+              this.goingPay = false
+            }
+          }
+        })
+        .catch(err => {
+          this.goingPay = false
+          if (!err.response) {
+            this.$message.error(err.message)
+          } else {
+            // console.log(err)
+          }
+        })
+    },
+    // 获取支付二维码
+    getEwm(){
+      console.log("二维码url",this.ewm)
+      document.getElementById("qrcode").innerHTML = "";
+      const code = this.ewm
+      this.qrcodeObj = new QRCode('qrcode', {
+        text: code,    
+        width: 200,
+        height: 200,
+        colorDark : '#000', // 0f0绿色 30AB37
+        colorLight : '#fff',
+        correctLevel : QRCode.CorrectLevel.H
+      });
+
+      if(this.payWayCn == 1){
+        //实现轮询
+        this.interval = window.setInterval(() => {
+          setTimeout(this.payVerify(), 0);
+        }, 3000);
+      }
+      // if(this.showEwm == false){
+      //   clearInterval(this.interval)
+      //   this.interval = null
+      // }
+    },
+    // 验证
+    payVerify() {
+      let baseUrl=this.$store.getters.baseUrl
+      this.$axios({
+          url: '/web/pay/verify',
+          method: 'post',
+          data: {
+            return_url: baseUrl+'/verify?order_sn='+this.order_sn
+          }
+        }).then(res => {
+          const data = res.data
+          // this.showEwm = true
+          // setTimeout(() => {
+          //   this.showEwm = false
+          //   clearInterval(this.interval)
+          //   this.interval = null
+          // }, 1000 * 60);
+          if (data.verification_status === 'completed') {
+            console.log("成功")
+            this.showEwm = false
+            clearInterval(this.interval)
+            this.interval = null
+            // window.location.replace(baseUrl+'/complete-paySuccess?orderId='+this.$route.query.orderId)
+            this.$router.replace({
+              path: '/complete-paySuccess',
+              query: {
+                orderId: this.order_sn,
+                orderSn: this.order_sn,
+                ChannelType: this.payWayCn,
+                type: `success`
+              }
+            })
+            
+          } 
+          // setTimeout(() => {
+          //   if(data.verification_status === 'failed'){
+          //     this.$router.replace({
+          //       path: '/complete-paySuccess/state/failed',
+          //       query: {
+          //         orderId: this.$route.query.orderId || this.$route.query.order_sn,
+          //       }
+          //     })
+          //   }
+          // }, 1000 * 10);
+          // else if (data.verification_status === 'failed') {
+              // setTimeout(() => {
+              //   this.showEwm = false
+              //   clearInterval(this.interval)
+              //   this.interval = null
+              // }, 1000 * 10);
+            // this.$router.replace({
+            //   path: '/complete-paySuccess/state/failed',
+            //   query: {
+            //     orderId: this.$route.query.orderId || this.$route.query.order_sn,
+            //   }
+            // })
+            // clearInterval(this.interval)
+            // this.interval = null
+          // }
+        })
+        .catch(err => {
+          clearInterval(this.interval)
+          this.interval = null
+        })
+    },
+    // 添加购物卡
+    useCard(){
+      const that = this
+
+      that.$errorMessage(that.$t(`${lang3}.PleaseLogin`));
+      const topC = document.getElementsByClassName('layout-box')[0];
+
+      let timer = setInterval(() => {
+        let ispeed = Math.floor(-that.scrollTop / 5)
+        topC.scrollTop = that.scrollTop + ispeed
+        if (that.scrollTop === 0) {
+          clearInterval(timer)
+        }
+      }, 22)
+    },
+    showUseCoupons() {
+      const that = this
+      this.$errorMessage(that.$t(`${lang}.needRegister`))
+      this.goTop()
+    },
+    goTop() {
+      const that = this;
+      const topC = document.getElementsByClassName('layout-box')[0];
+
+      let timer = setInterval(() => {
+        let ispeed = Math.floor(-that.scrollTop / 5)
+        topC.scrollTop = that.scrollTop + ispeed
+        if (that.scrollTop === 0) {
+          clearInterval(timer)
+        }
+      }, 22)
+    }
+  }
+}
+</script>
+
+<style lang="less" scoped>
+.pop-layer{
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1201;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+// 电汇
+.wireTransfer{
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  z-index: 2005;
+  top: 0;
+  left: 0;
+  .msg{
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    .msgbox{
+      // border-radius: 8px;
+      // padding: 0 30px 30px 30px;
+      
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
+      width: 680px;
+      // height: 695px;
+      // overflow-y: scroll;
+      background: rgba(255, 255, 255, 1);
+      .cha{
+        text-align: right;
+        i{
+          font-size: 30px;
+        }
+      }
+      .title{
+        text-align: center;
+        height: 40px;
+        line-height: 40px;
+        background-color: #f8f0f0;
+        position: relative;
+      }
+      .close{
+        position: absolute;
+        width: 16px;
+        top:12px;
+        right: 16px;
+      }
+      .content{
+        padding: 18px 30px 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        .Amount{
+          width: 460px;
+          color: #f29b87;
+          font-size: 24px;
+        }
+
+        .prompt{
+          width: 460px;
+          font-size: 14px;
+          color: #f29b87;
+          margin-top: 16px;
+        }
+
+        .accounts-block{
+          width: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+
+          .account-ways{
+            cursor: pointer;
+            margin-top: 20px;
+            .account-block {
+              padding: 0 20px;
+              transition: 0.2s linear;
+              position: relative;
+              width: 420px;
+              min-height: 190px;
+              background: rgba(248, 248, 248, 1);
+              border: 1px solid rgba(205, 205, 205, 1);
+              margin-bottom: 20px;
+              line-height: 28px;
+              color: #777777;
+              font-size: 12px;
+              display: flex;
+              justify-content: center;
+
+              .align-center{
+                .account{
+                  line-height: 50px;
+                  font-weight: 600;
+                  font-size: 15px;
+                }
+              }
+            }
+
+            .account-choose {
+              background-color: #ffffff;
+              border: 1px solid rgba(186, 127, 140, 1);
+              box-shadow: 2px 2px 4px 0px rgba(84, 84, 84, 0.16);
+              .account{
+                color: #ba7f8c !important;
+              }
+              .account-num{
+                color: #ba7f8c !important;
+              }
+              .account-name{
+                color: #ba7f8c !important;
+              }
+            }
+          }
+        }
+
+        .uploadPic{
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 420px;
+          margin-bottom: 20px;
+          border: solid 1px #cdcdcd;
+          padding: 20px;
+          background-color: #f8f8f8;
+
+          .up{
+            position: relative;
+            width: 148px;
+            height: 148px;
+            background-color: #ffffff;
+          }
+          .up-text{
+            width: 148px;
+            height: 40px;
+            line-height: 20px;
+            text-align: center;
+            position: absolute;
+            bottom: 10px;
+            // left: 28px;
+            color: #777777;
+            font-size: 14px;
+          }
+          .tip{
+            width: 249px;
+            font-size: 14px;
+            line-height: 20px;
+            color: #ff6b6b;
+            text-align: center;
+            margin-top: 6px;
+          }
+        }
+        .transactionNum{
+          display: flex;
+          margin-bottom: 40px;
+          .text2{
+            width: 215px;
+            // margin-right: 72px;
+            .number{
+              font-size: 16px;
+              line-height: 24px;
+            }
+            .can-select{
+              font-size: 16px;
+              // text-align: center;
+              color: #999999;
+            }
+          }
+          .num-input{
+            input{
+              width: 420px;
+              background-color: #f8f8f8;
+              border: solid 1px #cdcdcd;
+              line-height: 40px;
+              line-height: 40px;
+              padding-left: 15px;
+            }
+          }
+        }
+        .btnPay{
+          display: flex;
+          justify-content: space-around;
+          margin-bottom: 20px;
+          width: 460px;
+      
+          .cancel-pay{
+            width: 150px;
+            height: 36px;
+            background-color: #ffffff;
+            border: solid 1px #8b766c;
+            line-height: 34px;
+            text-align: center;
+            cursor: pointer;
+            color: #777777;
+          }
+          .finish-pay{
+            width: 150px;
+            height: 36px;
+            line-height: 34px;
+            text-align: center;
+            background-color: #8b766c;
+            cursor: pointer;
+            color:#fff;
+          }
+        }
+        
+        .account-question {
+          position: absolute;
+          bottom: 89px;
+          right: 31px;
+          width: 22px;
+          height: 22px;
+          line-height: 22px;
+          background: rgba(220, 148, 165, 1);
+          border-radius: 50%;
+          text-align: center;
+          color: #fff;
+          cursor: pointer;
+          z-index: 29;
+        }
+        .choose-tick {
+          position: absolute;
+          right: -1px;
+          bottom: 0;
+          width: 27px;
+          height: 26px;
+          img {
+            width: 100%;
+            height: 100%;
+          }
+        }
+      }
+    }
+  }
+
+}
+// 大陆微信二维码弹窗
+.qr_wrap{
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  z-index: 99999999;
+  top: 0;
+  left: 0;
+  #qrcode{
+    display: flex;
+    justify-content: center;
+  }
+  .msg{
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    .msgbox{
+      border-radius: 8px;
+      padding: 20px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
+      width: 520px;
+      height: 430px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      // height: 80%;
+      // height: 695px;
+      // overflow-y: scroll;
+      background: rgba(255, 255, 255, 1);
+      .content{
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        .close{
+          position: absolute;
+          right:0px;
+          top:0px;
+          font-size: 24px;
+          cursor: pointer;
+          color:#B5B5B5;
+        }
+      }
+      .wx{
+        position: absolute;
+        right:380px;
+        top:0px;
+        height: 41px;
+        width: 100px;
+      }
+      .cha{
+        text-align: right;
+        i{
+          font-size: 30px;
+        }
+      }
+    }
+  }
+  img{
+    width: 100%;
+    height: 100%;
+  }
+  .mainTextColor{
+    text-align: center;
+    font-size: 18px;
+    color:#333;
+  }
+  .money{
+    text-align: center;
+    margin: 15px 0;
+    font-size: 16px;
+    color:#333;
+  }
+}
+.amount{
+    margin-bottom: 8px!important;
+}
+.point{
+  text-align: right;
+  margin-bottom: 8px;
+  color:999;
+}
+.star{
+  color: #c28c8c;
+  display: inline-block;
+  width: 10px;
+}
+div {
+  box-sizing: border-box;
+}
+.order {
+  max-width: 1360px;
+  min-width: 1200px;
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+  text-align: left;
+  background: rgba(248, 248, 248, 1);
+  padding: 33px 30px 60px;
+  box-sizing: ;
+
+  .order-step {
+    max-width: 1300px;
+    min-width: 1200px;
+    height: 182px;
+    background: rgba(255, 255, 255, 1);
+    display: flex;
+    position: relative;
+    justify-content: center;
+    padding-top: 36px;
+
+    .one-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      margin-right: 250-31-31px;
+      position: relative;
+      z-index: 9;
+
+      .step-img {
+        width: 58px;
+        height: 58px;
+        background: rgba(225, 225, 225, 1);
+        border: 4px solid rgba(217, 217, 217, 1);
+        border-radius: 50%;
+        text-align: center;
+        line-height: 50px;
+        color: #fff;
+        font-size: 22px;
+        position: relative;
+        box-sizing: border-box;
+        margin-bottom: 4px;
+
+        img {
+          position: absolute;
+          top: -4px;
+          left: -4px;
+          width: 58px;
+          height: 58px;
+          display: block;
+        }
+
+        span {
+          position: relative;
+          z-index: 10;
+        }
+      }
+
+      .step-arrow {
+        width: 12px;
+        height: 6px;
+        margin-bottom: 9px;
+
+        img {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+      }
+
+      .step-title {
+        font-size: 18px;
+        color: #666;
+        line-height: 18px;
+        margin-bottom: 10px;
+      }
+
+      .step-desc {
+        color: #666;
+        line-height: 16px;
+        width: 121px;
+        text-align: center;
+        font-size: 12px;
+      }
+    }
+
+    .one-step:nth-child(3) {
+      margin-right: 0;
+    }
+
+    .step-line {
+      position: absolute;
+      top: 65px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 250 * 2+58+20px;
+      height: 2px;
+      background: rgba(231, 231, 231, 1);
+      z-index: 0;
+    }
+  }
+
+  .user-info {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    line-height: 17px;
+    font-size: 16px;
+    color: #333;
+    margin: 21px 0 18px 60px;
+
+    .iconrentou {
+      display: block;
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      line-height: 16px;
+      font-size: 16px;
+      color: #cfa48d;
+      left: -23px;
+    }
+
+    .login-line {
+      color: #333;
+      font-size: 16px;
+      line-height: 16px;
+
+      span:nth-child(2n + 1) {
+        color: #cfa48d;
+        cursor: pointer;
+      }
+    }
+  }
+
+  .address-box {
+    position: relative;
+    max-width: 1300px;
+    min-width: 1200px;
+    overflow: hidden;
+    transition: 0.3s linear;
+    margin-bottom: 22px;
+    box-sizing: border-box;
+    .addr-blocks {
+      max-width: 1300px;
+      min-width: 1200px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      box-sizing: border-box;
+      .addr-block {
+        position: relative;
+        width: 49%;
+        height: 250px;
+        padding: 25px 30px 0;
+        box-sizing: border-box;
+        margin: 0 auto 20px;
+        border: 1px solid rgba(230, 230, 230, 1);
+        background-color: #ffffff;
+        box-sizing: border-box;
+        font-size: 16px;
+        color: #333;
+        .addr-user {
+          max-width: 70%;
+          font-size: 26px;
+          height: 40px;
+          line-height: 40px;
+          overflow: hidden;
+          word-break: break-all;
+          margin-bottom: 14px;
+        }
+        .addr-user-phone {
+          max-width: 70%;
+          display: flex;
+          align-items: flex-end;
+          font-family: twCenMt;
+          margin-bottom: 2px;
+          div:nth-child(1) {
+            margin-right: 5px;
+          }
+        }
+        .addr-user-email{
+          max-width: 70%;
+          margin-bottom: 14px;
+        }
+        .addr-address {
+          max-width: 70%;
+          line-height: 20px;
+          word-break: break-all;
+          margin-bottom: 10px;
+        }
+        
+        .addr-board {
+          display: block;
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          top: 0;
+          left: 0;
+          cursor: pointer;
+          z-index: 10;
+        }
+        .iconlajitong {
+          position: absolute;
+          bottom: 36px;
+          right: 28px;
+          display: block;
+          font-size: 21px;
+          color: #999;
+          z-index: 39;
+          cursor: pointer;
+        }
+        .addr-btn {
+          position: absolute;
+          /*width: 50px;*/
+          padding: 0 10px;
+          height: 28px;
+          line-height: 26px;
+          border: 1px solid #aa8a7b;
+          border-radius: 4px;
+          background: rgba(251, 247, 245, 1);
+          color: #aa8a7b;
+          text-align: center;
+          cursor: pointer;
+          bottom: 36px;
+          right: 80px;
+          z-index: 40;
+        }
+        .mrAdd{
+          position: absolute;
+          text-align: center;
+          cursor: pointer;
+          background: #fff;
+          top: 16px;
+          right: 28px;
+          z-index: 40;
+          width: 28%;
+          text-align: right;
+        }
+        img {
+          display: block;
+          width: 100%;
+          position: absolute;
+          bottom: 0;
+          left: 0;
+        }
+      }
+      .addr-active {
+        border: 1px solid rgba(212, 196, 188, 1);
+      }
+    }
+  }
+
+  .new-address {
+    max-width: 1300px;
+    min-width: 1200px;
+    height: 360px;
+    background-color: #ffffff;
+    position: relative;
+    margin: 0 0 22px;
+    padding: 20px 51px 0 36px;
+    overflow: hidden;
+    transition: 0.3s linear;
+
+    .new-address-title {
+      height: 20px;
+      display: flex;
+      align-items: flex-end;
+      margin-bottom: 19px;
+
+      .na-line {
+        width: 4px;
+        height: 20px;
+        background: rgba(207, 164, 141, 1);
+        border-radius: 2px;
+        margin-right: 8px;
+      }
+
+      .na-title {
+        font-size: 20px;
+        color: #333;
+        line-height: 20px;
+        margin-right: 11px;
+      }
+
+      .na-little-word {
+        font-size: 14px;
+        line-height: 14px;
+        color: #c28c8c;
+      }
+    }
+
+    .new-address-input {
+      display: flex;
+      justify-content: space-between;
+
+      .left-side,
+      .right-side {
+        width: 545px;
+        height: 176+80px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .input-line {
+        width: 545px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .label {
+          font-size: 14px;
+          color: #333;
+        }
+
+        .input-box {
+          width: 420px;
+          border: 1px solid rgba(221, 221, 221, 1);
+          border-radius: 4px;
+          position: relative;
+          color: #111;
+
+          input[type='text'] {
+            width: 418px;
+            height: 38px;
+            line-height: 38px;
+            display: block;
+            -webkit-appearance: none;
+            border-radius: 4px;
+            border: 0;
+            outline: 0;
+            font-size: 16px;
+            padding: 0 13px;
+          }
+
+          textarea {
+            width: 418px;
+            height: 58px;
+            line-height: 29px;
+            display: block;
+            -webkit-appearance: none;
+            border-radius: 4px;
+            border: 0;
+            outline: 0;
+            font-size: 16px;
+            padding: 0 13px;
+            resize: none;
+          }
+
+          input[type='address'] {
+            width: 418px;
+            height: 32px;
+            line-height: 32px;
+            display: block;
+            -webkit-appearance: none;
+            border-radius: 4px;
+            border: 0;
+            outline: 0;
+            font-size: 14px;
+            padding: 0 13px;
+            background: #fff;
+          }
+
+          select {
+            position: absolute;
+            z-index: 9;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+          }
+
+          .iconxiala {
+            position: absolute;
+            font-size: 12px;
+            width: 12px;
+            height: 12px;
+            line-height: 12px;
+            display: block;
+            color: #aa8a7b;
+            left: 379px;
+            top: 50%;
+            transform: translateY(-50%);
+          }
+
+          .wrong-input {
+            color: #d9423e;
+          }
+
+          .wrong-alert {
+            position: absolute;
+            width: 109+7px;
+            height: 23px;
+            line-height: 23px;
+            text-align: center;
+            color: #d9423e;
+            background-image: url('../../../static/order/wrong-input.png');
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            top: 9px;
+            right: 19px;
+          }
+        }
+
+        .tel-special {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 420px;
+
+          .tel {
+            width: 290px;
+
+            input[type='text'] {
+              width: 288px;
+            }
+          }
+
+          .tel-area {
+            width: 120px;
+            height: 40px;
+            background: rgba(248, 248, 248, 1);
+            border: 1px solid rgba(221, 221, 221, 1);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+
+            input {
+              width: 100%;
+              height: 100%;
+              line-height: 38px;
+              text-align: left;
+              background: #fff;
+              -webkit-appearance: none;
+              border: 0;
+              padding: 0 0 0 13px;
+              margin: 0;
+              outline: 0;
+            }
+
+            select {
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              opacity: 0;
+            }
+
+            .iconxiala {
+              position: absolute;
+              font-size: 12px;
+              width: 12px;
+              height: 12px;
+              line-height: 12px;
+              display: block;
+              color: #aa8a7b;
+              right: 12px;
+              top: 50%;
+              transform: translateY(-50%);
+            }
+          }
+        }
+
+        .border-change {
+          border: 1px solid rgba(170, 138, 123, 1);
+        }
+      }
+    }
+
+    .new-address-btn {
+      position: absolute;
+      top: 15px;
+      right: 51px;
+      width: 160px;
+      height: 30px;
+      line-height: 30px;
+      background: rgba(176, 160, 155, 1);
+      text-align: center;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .close-new-address-btn {
+      position: absolute;
+      top: 15px;
+      right: 231px;
+      width: 160px;
+      height: 30px;
+      line-height: 30px;
+      /*background:rgba(176,160,155,1);*/
+      border: 1px solid rgba(176, 160, 155, 1);
+      text-align: center;
+      color: rgba(176, 160, 155, 1);
+      font-size: 14px;
+      cursor: pointer;
+    }
+  }
+
+  .is-new-address {
+    width: 480px;
+    height: 50px;
+    background: rgba(255, 255, 255, 1);
+    border: 1px dotted rgba(221, 221, 221, 1);
+    font-size: 18px;
+    color: #333;
+    text-align: center;
+    line-height: 50px;
+    margin: 0 auto 20px;
+    cursor: pointer;
+  }
+
+  .cart-top-bar {
+    max-width: 1300px;
+    min-width: 1200px;
+    height: 40px;
+    line-height: 40px;
+    background: rgba(255, 255, 255, 1);
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    color: #666;
+    padding-left: 77px;
+    margin-top: 20px;
+    text-align: center;
+
+    span:nth-child(1) {
+      width: 59%;
+      text-align: left;
+    }
+    span:nth-child(2){
+      width: 6.8%;
+    }
+    span:nth-child(3),
+    span:nth-child(4) {
+      width: 11.8%;
+    }
+  }
+
+  .cart-goods {
+    max-width: 1300px;
+    min-width: 1200px;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 1);
+    margin-bottom: 17px;
+
+    .finished {
+      max-width: 1300px;
+      min-width: 1200px;
+      height: 179px;
+      display: flex;
+      align-items: center;
+
+      .cart-radio {
+        width: 49px;
+        height: 178px;
+      }
+
+      .good-info {
+        position: relative;
+        width: 1200px;
+        height: 179px;
+        border-bottom: 1px solid rgba(239, 239, 239, 1);
+        display: flex;
+        align-items: center;
+
+        .good-img {
+          position: relative;
+          width: 120px;
+          height: 120px;
+          background: rgba(255, 255, 255, 1);
+          border: 1px solid rgba(221, 221, 221, 1);
+          border-radius: 2px;
+          display: flex;
+          align-items: center;
+          margin-right: 20px;
+
+          img {
+            display: block;
+            width: 100%;
+            height: 100%;
+          }
+        }
+
+        .good-desc {
+          width: 269px;
+          line-height: 18px;
+          margin-right: 71px;
+
+          div:nth-child(1) {
+            max-height: 18 * 3px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            /*word-break: break-all;*/
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+          }
+
+          div:nth-child(2) {
+            color: #999;
+          }
+        }
+
+        .good-information {
+          width: 185px;
+          margin-right: 83px;
+
+          .infos {
+            width: 100%;
+            display: flex;
+            margin-bottom: 10px;
+
+            div:nth-child(1) {
+              width: 50%;
+              color: #666;
+            }
+
+            div:nth-child(2) {
+              width: 50%;
+              color: #111;
+            }
+          }
+        }
+
+        .good-description {
+          width: 185px;
+          line-height: 20px;
+          max-height: 60px;
+          color: #666;
+          margin-right: 83px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          word-break: break-all;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+        }
+
+        .good-num {
+          width: 60px;
+          text-align: center;
+          font-size: 18px;
+          color: #333;
+          margin-right: 217-60-83px;
+        }
+
+        .good-price {
+          font-family: twCenMt;
+          font-size: 18px;
+          color: #f29b87;
+          width: 130px;
+          text-align: center;
+        }
+
+        .good-btn {
+          width: 80px;
+          height: 21px;
+          line-height: 21px;
+          position: absolute;
+          top: 50%;
+          right: 0;
+          transform: translateY(-50%);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+
+          div:nth-child(2) {
+            width: 1px;
+            height: 21px;
+            background-color: rgba(166, 166, 166, 1);
+          }
+
+          i {
+            width: 18px;
+            display: block;
+            height: 21px;
+            line-height: 21px;
+            color: #999999;
+            font-size: 20px;
+            cursor: pointer;
+          }
+
+          div:nth-child(1) {
+            cursor: pointer;
+            width: 22px;
+            height: 21px;
+
+            img {
+              display: block;
+              width: 100%;
+              height: 100%;
+            }
+          }
+        }
+      }
+    }
+
+    .customization {
+      width: 1300px;
+      height: 360px;
+      display: flex;
+      align-items: center;
+      position: relative;
+
+      .cart-radio {
+        width: 49px;
+        height: 282px;
+      }
+
+      .good-info {
+        position: relative;
+        width: 1200px;
+        height: 281px;
+        border-bottom: 1px solid rgba(239, 239, 239, 1);
+
+        .good-info-dotted {
+          position: absolute;
+          left: 142px;
+          top: 140px;
+          width: 956px;
+          height: 1px;
+          padding-left: 20px;
+          border-bottom: 1px dotted rgba(221, 221, 221, 1);
+        }
+
+        .good-info-line {
+          width: 1200px;
+          height: 140px;
+          display: flex;
+          align-items: center;
+
+          .good-img {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 1);
+            border: 1px solid rgba(221, 221, 221, 1);
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            margin-right: 40px;
+
+            img {
+              display: block;
+              width: 100%;
+              height: 100%;
+            }
+          }
+
+          .good-desc {
+            width: 269px;
+            line-height: 18px;
+            margin-right: 71px;
+
+            div:nth-child(1) {
+              max-height: 18 * 3px;
+              margin-bottom: 16px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              display: -webkit-box;
+              word-break: break-all;
+              -webkit-line-clamp: 3;
+              -webkit-box-orient: vertical;
+            }
+
+            div:nth-child(2) {
+              color: #999;
+            }
+          }
+
+          .good-information {
+            width: 185px;
+            margin-right: 83px;
+
+            .infos {
+              width: 100%;
+              display: flex;
+              margin-bottom: 10px;
+
+              div:nth-child(1) {
+                width: 50%;
+                color: #666;
+              }
+
+              div:nth-child(2) {
+                width: 50%;
+                color: #111;
+              }
+            }
+          }
+
+          .good-description {
+            width: 185px;
+            line-height: 20px;
+            max-height: 60px;
+            color: #666;
+            margin-right: 83px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            word-break: break-all;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+          }
+
+          .good-num {
+            width: 60px;
+            text-align: center;
+            font-size: 18px;
+            color: #333;
+            margin-right: 217-60-83px;
+          }
+
+          .good-price {
+            font-family: twCenMt;
+            font-size: 18px;
+            color: #f29b87;
+            width: 130px;
+            text-align: center;
+          }
+        }
+
+        .good-btn {
+          width: 80px;
+          height: 21px;
+          line-height: 21px;
+          position: absolute;
+          top: 50%;
+          right: 0;
+          transform: translateY(-50%);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+
+          div:nth-child(2) {
+            width: 1px;
+            height: 21px;
+            background-color: rgba(166, 166, 166, 1);
+          }
+
+          i {
+            width: 18px;
+            display: block;
+            height: 21px;
+            line-height: 21px;
+            color: #999999;
+            font-size: 20px;
+            cursor: pointer;
+          }
+
+          div:nth-child(1) {
+            cursor: pointer;
+            width: 22px;
+            height: 21px;
+
+            img {
+              display: block;
+              width: 100%;
+              height: 100%;
+            }
+          }
+        }
+      }
+
+      .good-dingzhi-logo {
+        position: absolute;
+        width: 200px;
+        height: 24px;
+        left: 24px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+
+        span {
+          color: #999;
+          font-size: 14px;
+          line-height: 14px;
+        }
+
+        i {
+          display: block;
+          color: #aaa;
+        }
+      }
+    }
+
+    .couple {
+      width: 1300px;
+      height: 174 * 2+2px;
+      display: flex;
+      align-items: center;
+
+      .cart-radio {
+        width: 49px;
+        height: 174 * 2+2px;
+      }
+
+      .good-info {
+        position: relative;
+        width: 1200px;
+        height: 174 * 2+2px;
+        border-bottom: 1px solid rgba(239, 239, 239, 1);
+        display: flex;
+        align-items: center;
+
+        .good-img {
+          position: relative;
+          width: 120px;
+          height: 120px;
+          background: rgba(255, 255, 255, 1);
+          border: 1px solid rgba(221, 221, 221, 1);
+          border-radius: 2px;
+          display: flex;
+          align-items: center;
+          margin-right: 20px;
+          overflow: hidden;
+
+          img {
+            display: block;
+            width: 100%;
+            height: 100%;
+          }
+        }
+
+        .good-desc {
+          width: 269px;
+          line-height: 18px;
+          margin-right: 71px;
+
+          div:nth-child(1) {
+            max-height: 18 * 3px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            word-break: break-all;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+          }
+
+          div:nth-child(2) {
+            color: #999;
+          }
+        }
+
+        .couple-rings {
+          position: relative;
+
+          .one-person {
+            height: 174px;
+            display: flex;
+            align-items: center;
+
+            .good-information {
+              width: 185px;
+              margin-right: 83px;
+
+              .infos {
+                width: 100%;
+                display: flex;
+                margin-bottom: 21px;
+
+                div:nth-child(1) {
+                  width: 50%;
+                  color: #666;
+                }
+
+                div:nth-child(2) {
+                  width: 50%;
+                  color: #111;
+                }
+              }
+            }
+
+            .good-num {
+              width: 60px;
+              text-align: center;
+              font-size: 18px;
+              color: #333;
+              margin-right: 217-60-83px;
+            }
+
+            .good-price {
+              font-family: twCenMt;
+              font-size: 18px;
+              color: #f29b87;
+              width: 130px;
+              text-align: center;
+            }
+          }
+
+          .couple-line {
+            position: absolute;
+            top: 173px;
+            left: -56px;
+            width: 673px;
+            height: 1px;
+            border-bottom: 1px dotted rgba(221, 221, 221, 1);
+          }
+        }
+
+        .good-btn {
+          width: 80px;
+          height: 21px;
+          line-height: 21px;
+          position: absolute;
+          top: 50%;
+          right: 0;
+          transform: translateY(-50%);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+
+          div:nth-child(2) {
+            width: 1px;
+            height: 21px;
+            background-color: rgba(166, 166, 166, 1);
+          }
+
+          i {
+            width: 18px;
+            display: block;
+            height: 21px;
+            line-height: 21px;
+            color: #999999;
+            font-size: 20px;
+            cursor: pointer;
+          }
+
+          div:nth-child(1) {
+            cursor: pointer;
+            width: 22px;
+            height: 21px;
+
+            img {
+              display: block;
+              width: 100%;
+              height: 100%;
+            }
+          }
+        }
+      }
+    }
+
+    .img-bord {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #fff;
+      position: absolute;
+      z-index: 3;
+      top: 0;
+      left: 0;
+      background-color: rgba(102, 102, 102, 0.4);
+    }
+
+    .lose-btn {
+      width: 101px;
+      height: 21px;
+      line-height: 21px;
+      position: absolute;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      div:nth-child(2) {
+        width: 1px;
+        height: 21px;
+        background-color: rgba(166, 166, 166, 1);
+      }
+
+      i {
+        display: block;
+        width: 18px;
+        height: 21px;
+        line-height: 21px;
+        color: #999999;
+        font-size: 20px;
+        cursor: pointer;
+      }
+
+      div:nth-child(1) {
+        width: 43px;
+        height: 15px;
+        line-height: 15px;
+        font-size: 14px;
+        color: #aa8a7b;
+        cursor: pointer;
+      }
+    }
+  }
+
+  .order-info {
+    position: relative;
+    max-width: 1300px;
+    min-width: 1200px;
+    height: 544px;
+    // height: 314px;
+    background: rgba(255, 255, 255, 1);
+    padding: 30px 50px 0 35px;
+    display: flex;
+    justify-content: space-between;
+
+    .left-info {
+      width: 48%;
+
+      .new-address-title {
+        height: 20px;
+        display: flex;
+        align-items: flex-end;
+        margin-bottom: 25px;
+
+        .na-line {
+          width: 4px;
+          height: 20px;
+          background: rgba(207, 164, 141, 1);
+          border-radius: 2px;
+          margin-right: 8px;
+        }
+
+        .na-title {
+          font-size: 20px;
+          color: #333;
+          line-height: 20px;
+          margin-right: 11px;
+        }
+
+        .na-little-word {
+          font-size: 14px;
+          line-height: 14px;
+          color: #c28c8c;
+        }
+      }
+
+      .is-pack {
+        display: flex;
+        align-items: center;
+        margin-bottom: 22px;
+        padding-left: 10px;
+
+        div {
+          font-size: 14px;
+          color: #333;
+          line-height: 16px;
+
+          span:nth-child(2) {
+            color: #999;
+          }
+        }
+      }
+
+      .send-time {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        padding-left: 10px;
+
+        .send-left {
+          div:nth-child(1) {
+            line-height: 14px;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 5px;
+          }
+
+          div:nth-child(2) {
+            line-height: 12px;
+            font-size: 12px;
+            color: #cfa48d;
+            cursor: pointer;
+
+            a {
+              color: #cfa48d;
+            }
+          }
+        }
+
+        .send-right {
+          line-height: 18px;
+          font-size: 18px;
+          color: #333;
+        }
+      }
+
+      .after-sale-email {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 14px;
+        line-height: 14px;
+        padding-left: 10px;
+        margin-bottom: 9px;
+
+        div:nth-child(1) {
+          color: #333;
+        }
+
+        div:nth-child(2) {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+      }
+
+      .after-sale-email-input {
+        width: 540px;
+        height: 40px;
+        background: rgba(255, 255, 255, 1);
+        border: 1px solid rgba(221, 221, 221, 1);
+        border-radius: 4px;
+        margin-left: 10px;
+
+        input {
+          width: 538px;
+          height: 38px;
+          line-height: 38px;
+          padding: 0 11px;
+          font-size: 14px;
+          color: #1b1b1b;
+          -webkit-appearance: none;
+          border: 0;
+          outline: 0;
+          border-radius: 4px;
+        }
+
+        .wrong-input {
+          color: #d9423e;
+        }
+      }
+
+      .border-wrong {
+        border: 1px solid #d9423e;
+      }
+
+      .message {
+        width: 100%;
+        padding-left: 10px;
+        margin-top: 19px;
+        font-size: 14px;
+        color: #333333;
+        position: relative;
+
+        textarea {
+          width: 100%;
+          height: 80px;
+          padding: 0 12px;
+          color: #111;
+          -webkit-appearance: none;
+          outline: 0;
+          resize: none;
+          border: 1px solid rgba(221, 221, 221, 1);
+          border-radius: 4px;
+          margin: 9px 0 71px;
+        }
+
+        .border-change {
+          border: 1px solid rgba(170, 138, 123, 1);
+        }
+
+        .border-wrong {
+          border: 1px solid #d9423e;
+        }
+
+        .tex-count{
+          position: absolute;
+          right:0;
+          bottom: 50px;
+        }
+
+        .color-red{
+          color: red;
+        }
+      }
+
+      .border-change {
+        border: 1px solid rgba(170, 138, 123, 1);
+      }
+
+      .free-check {
+        width: 16px;
+        height: 16px;
+        background: rgba(255, 255, 255, 1);
+        border: 1px solid rgba(187, 187, 187, 1);
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 9px;
+      }
+
+      .icongou {
+        display: block;
+        width: 16px;
+        height: 16px;
+        background: rgba(170, 138, 123, 1);
+        border-radius: 2px;
+        color: #fff;
+        font-size: 16px;
+        line-height: 16px;
+        cursor: pointer;
+        margin-right: 9px;
+      }
+    }
+
+    .right-info {
+      width: 48%;
+
+      .coupon {
+        /*background: pink;*/
+        width: 100%;
+        height: 60px;
+        margin-bottom: 20px;
+        position: relative;
+
+        .too-input {
+          width: 390px;
+          height: 28px;
+          line-height: 28px;
+          position: absolute;
+          top: 0;
+          left: 0;
+          -webkit-appearance: none;
+          border: 1px solid rgba(221, 221, 221, 1);
+          outline: 0;
+          padding: 0 20px 0 60px;
+          background: rgba(249, 249, 249, 1);
+          text-align: right;
+        }
+
+        .too-tell {
+          color: #333;
+          font-size: 14px;
+          width: 390px;
+          height: 28px;
+          line-height: 28px;
+          padding: 0 20px 0 60px;
+          text-align: right;
+          position: absolute;
+          top: 0;
+          left: 0;
+        }
+
+        .iconxiala {
+          position: absolute;
+          display: block;
+          color: #aa8a7b;
+          font-size: 12px;
+          top: 7px;
+          left: 21px;
+        }
+
+        .too-select {
+          position: absolute;
+          display: block;
+          top: 7px;
+          left: 21px;
+          opacity: 0;
+        }
+
+        .too-btn {
+          width: 100px;
+          height: 28px;
+          text-align: center;
+          line-height: 28px;
+          color: white;
+          font-size: 14px;
+          cursor: pointer;
+          position: absolute;
+          top: 0;
+          left: 390+20px;
+        }
+
+        .too-die {
+          color: #d9423e;
+          font-size: 12px;
+          position: absolute;
+          left: 0;
+          top: 8+28px;
+        }
+
+        .too-wenhao {
+          width: 16px;
+          height: 16px;
+          line-height: 16px;
+          text-align: center;
+          background: rgba(221, 189, 170, 1);
+          border-radius: 50%;
+          font-size: 12px;
+          font-weight: 400;
+          color: rgba(255, 255, 255, 1);
+          position: absolute;
+          top: 6px;
+          right: 0;
+          cursor: pointer;
+
+          .too-gay {
+            display: none;
+            position: absolute;
+            width: 535px;
+            /*height:102px;*/
+            top: 4+16px;
+            right: -10px;
+            background-image: url('../../../static/order/too-big.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            z-index: 8;
+            color: #000;
+            text-align: left;
+            padding: 40px;
+          }
+        }
+
+        .too-wenhao:hover .too-gay {
+          display: block;
+        }
+      }
+
+      .new-address-title {
+        width: 1300-51-36px;
+        height: 20px;
+        display: flex;
+        align-items: flex-end;
+        margin-bottom: 30px;
+
+        .na-line {
+          width: 4px;
+          height: 20px;
+          background: rgba(207, 164, 141, 1);
+          border-radius: 2px;
+          margin-right: 8px;
+        }
+
+        .na-title {
+          font-size: 20px;
+          color: #333;
+          line-height: 20px;
+          margin-right: 11px;
+        }
+      }
+
+      .price-detail {
+        width: 100%;
+        padding-left: 15px;
+        font-size: 12px;
+        color: #656565;
+
+        .detail-line {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 13px;
+
+          div:nth-child(1) {
+            position: relative;
+          }
+
+          .hkd {
+            font-family: twCenMt;
+            font-size: 14px;
+            color: #111;
+          }
+
+          .color-pink {
+            color: #f29b87;
+          }
+
+          .color-gold {
+            color: #aa8a7b;
+          }
+
+          .price-big {
+            font-size: 20px;
+          }
+
+          .question {
+            position: absolute;
+            left: 75px;
+            top: 2px;
+            width: 16px;
+            height: 16px;
+            background: rgba(221, 189, 170, 1);
+            border-radius: 50%;
+            color: #ffffff;
+            text-align: center;
+            line-height: 16px;
+            font-size: 12px;
+            cursor: pointer;
+
+            a {
+              color: #ffffff;
+            }
+
+            .answer {
+              display: none;
+              width: 223+9px;
+              height: 93px;
+              color: #666;
+              font-size: 12px;
+              background-image: url('../../../static/order/answer.png');
+              background-size: 100% 100%;
+              background-repeat: no-repeat;
+              position: absolute;
+              left: 20px;
+              top: -33px;
+              padding: 30px 10px 30px 20px;
+              text-align: left;
+              z-index: 9;
+            }
+          }
+
+          .question:hover .answer {
+            display: block;
+          }
+        }
+      }
+    }
+
+    .info-line {
+      position: absolute;
+      width: 1200px;
+      height: 1px;
+      background: rgba(221, 221, 221, 1);
+      top: 406px;
+      left: 50px;
+    }
+
+  }
+  .buy-btn {
+    position: absolute;
+    bottom: 115px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 480px;
+    height: 40px;
+    background: rgba(51, 51, 51, 1);
+    text-align: center;
+    line-height: 40px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+
+    span:nth-child(1) {
+      font-family: twCenMt;
+      // margin-right: 50px;
+    }
+
+    &.disabled {
+      // background: #ddd;
+      // color: #aaa;
+    }
+  }
+}
+
+
+// 支付页面样式
+div {
+  box-sizing: border-box;
+}
+// .payways{
+//   position: absolute;
+//   top:300px;
+// }
+.pay {
+  max-width: 1360px;
+  min-width: 1200px;
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+  text-align: left;
+  background: rgba(248, 248, 248, 1);
+  padding: 33px 0px 38px;
+  box-sizing: border-box;
+  .buy-btn {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 480px;
+    height: 40px;
+    background: rgba(51, 51, 51, 1);
+    text-align: center;
+    line-height: 40px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    span:nth-child(1) {
+      font-family: twCenMt;
+      margin-right: 50px;
+    }
+  }
+  .order-step {
+    width: 1300px;
+    height: 182px;
+    background: rgba(255, 255, 255, 1);
+    display: flex;
+    position: relative;
+    justify-content: center;
+    padding-top: 36px;
+    margin-bottom: 20px;
+    .one-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      margin-right: 250-31-31px;
+      position: relative;
+      z-index: 9;
+      .step-img {
+        width: 58px;
+        height: 58px;
+        background: rgba(225, 225, 225, 1);
+        border: 4px solid rgba(217, 217, 217, 1);
+        border-radius: 50%;
+        text-align: center;
+        line-height: 50px;
+        color: #fff;
+        font-size: 22px;
+        position: relative;
+        box-sizing: border-box;
+        margin-bottom: 4px;
+        img {
+          position: absolute;
+          top: -4px;
+          left: -4px;
+          width: 58px;
+          height: 58px;
+          display: block;
+        }
+        span {
+          position: relative;
+          z-index: 10;
+        }
+      }
+      .step-arrow {
+        width: 12px;
+        height: 6px;
+        margin-bottom: 9px;
+        img {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+      }
+      .step-title {
+        font-size: 18px;
+        color: #666;
+        line-height: 18px;
+        margin-bottom: 10px;
+      }
+      .step-desc {
+        color: #666;
+        line-height: 16px;
+        width: 121px;
+        text-align: center;
+        font-size: 12px;
+      }
+    }
+    .one-step:nth-child(3) {
+      margin-right: 0;
+    }
+    .step-line-one {
+      position: absolute;
+      top: 65px;
+      left: 37%;
+      transform: translateX(-50%);
+      width: (250 * 2+58+20)/2px;
+      height: 4px;
+      background: linear-gradient(
+        270deg,
+        rgba(234, 186, 196, 1) 0%,
+        rgba(215, 136, 155, 1) 97%
+      );
+      box-shadow: 0px 3px 2px 0px rgba(0, 0, 0, 0);
+      z-index: 0;
+    }
+    .step-line-two {
+      position: absolute;
+      top: 65px;
+      left: 62%;
+      transform: translateX(-50%);
+      width: (250 * 2+58+20)/2px;
+      height: 4px;
+      background: #e1e1e1;
+      z-index: 0;
+    }
+  }
+  .pay-ways {
+    max-width: 1300px;
+    min-width: 1200px;
+    background-color: #fff;
+    padding: 39px 40px 40px;
+    box-sizing: border-box;
+
+    .new-address-title {
+      width: 48%;
+      height: 20px;
+      display: flex;
+      align-items: flex-end;
+      margin-bottom: 17px;
+      position: relative;
+      .note{
+        font-size: 12px;
+        position: absolute;
+        // left:279px;
+        right: 0;
+        // margin-left: 230px;
+        color: #cac7c7;
+        .star{
+          color: red;
+        }
+      }
+      .na-line {
+        width: 4px;
+        height: 20px;
+        background: rgba(207, 164, 141, 1);
+        border-radius: 2px;
+        margin-right: 8px;
+      }
+      .na-title {
+        font-size: 20px;
+        color: #333;
+        line-height: 20px;
+        margin-right: 11px;
+      }
+    }
+    .pay-blocks {
+      position: relative;
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      .pay-block {
+        transition: 0.2s linear;
+        position: relative;
+        width: 49%;
+        height: 120px;
+        background: rgba(248, 248, 248, 1);
+        border: 1px solid rgba(205, 205, 205, 1);
+        margin-bottom: 40px;
+        cursor: pointer;
+        padding: 17px 0 0 53px;
+        box-sizing: border-box;
+        .pay-img {
+          width: 189px;
+          height: 56px;
+          /*background-color: pink;*/
+          margin-bottom: 7px;
+          img {
+            display: block;
+            width: 100%;
+            height: 100%;
+          }
+        }
+        .pay-desc {
+          font-size: 14px;
+          color: #1d1d1d;
+          line-height: 14px;
+        }
+        .pay-price {
+          font-size: 24px;
+          font-family: twCenMt;
+          color: #f29b87;
+          position: absolute;
+          right: 80px;
+          top: 33px;
+          line-height: 24px;
+        }
+        .pay-price-change{
+          font-size: 15px;
+          font-family: twCenMt;
+          color: #c6bbb9;
+          position: absolute;
+          right: 80px;
+          top: 55px;
+          line-height: 24px;
+        }
+        .choose-tick {
+          position: absolute;
+          right: 0;
+          bottom: 0;
+          width: 27px;
+          height: 26px;
+          img {
+            width: 100%;
+            height: 100%;
+          }
+        }
+      }
+      .pay-block:hover {
+        box-shadow: 2px 2px 4px 0px rgba(84, 84, 84, 0.16);
+      }
+      .pay-choose {
+        background-color: #ffffff;
+        border: 1px solid rgba(186, 127, 140, 1);
+        box-shadow: 2px 2px 4px 0px rgba(84, 84, 84, 0.16);
+      }
+      .pay-question {
+        position: absolute;
+        bottom: 89px;
+        right: 31px;
+        width: 22px;
+        height: 22px;
+        line-height: 22px;
+        background: rgba(220, 148, 165, 1);
+        border-radius: 50%;
+        text-align: center;
+        color: #fff;
+        cursor: pointer;
+        z-index: 29;
+      }
+    }
+    .pay-btn {
+      width: 480px;
+      height: 40px;
+      line-height: 40px;
+      text-align: center;
+      color: #fff;
+      background: rgba(51, 51, 51, 1);
+      cursor: pointer;
+      margin: 0 auto;
+    }
+  }
+}
+
+// 发票
+.invoice{
+  .btn_type{
+    padding: 20px 0;
+    display: flex;
+    justify-content: space-around;
+    button{
+      width: 145px;
+      height: 35px;
+      border-radius: 4px;
+      color:#ccc;
+      border:1px solid #ddd;
+    }
+    .active{
+      border:1px solid #8b766c;
+      color:#000;
+    }
+  }
+  .empltyErr{
+    // margin: 10px 0;
+    color:red;
+    margin-left: 142px;
+    font-size: 12px;
+  }
+  .emplty{
+    margin: 10px 0;
+    color:red;
+    font-size: 12px;
+  }
+  .gou-img{
+    // display: flex;
+    // justify-content: center;
+    width: 455px;
+    padding: 0px 180px;
+    img{
+      width: 75px;
+      height: 75px;
+    }
+  }
+  .invoice-btn{
+    margin-left: 20px;
+    div{
+      display: flex;
+    }
+    span{
+      display: inline-block;
+      height: 30px;
+      line-height: 30px;
+      margin-left: 10px;
+    }
+  }
+  .tips{
+    margin: 20px 0;
+    font-size: 12px;
+  }
+  .btn{
+    text-align: center;
+    margin-top: 50px;
+    button{
+      width: 120px;
+      height: 35px;
+      background: #8b766c;
+      border-radius: 4px;
+      color:#fff;
+    }
+  }
+  .title{
+    font-size: 25px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .invoice-box{
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    z-index: 99999999;
+    top: 0;
+    left: 0;
+    .email-box{
+      height: 60px;
+    }
+    .msg{
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      .msgbox{
+        border-radius: 8px;
+        padding: 30px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%);
+        width: 520px;
+        // height: 695px;
+        // overflow-y: scroll;
+        background: rgba(255, 255, 255, 1);
+        .cha{
+          text-align: right;
+          i{
+            font-size: 30px;
+          }
+        }
+      }
+    }
+  }
+  .total{
+    margin-top: 50px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    .totle-price{
+      width: 70%;
+      color: #f29b87;
+    }
+  }
+  .base-info-line {
+      display: flex;
+      font-size: 14px;
+      color: #333;
+      padding-top: 15px;
+      // margin-bottom: 30px;
+      .base-info-line-title {
+        width: 110px;
+        margin-right: 20px;
+        font-size: 16px;
+      }
+      .base-name-input {
+        display: block;
+        width: 190px;
+        height: 41px;
+        line-height: 41px;
+        -webkit-appearance: none;
+        outline: 0;
+        padding: 0;
+        margin: 0 27px 0 0;
+        border: 0;
+        border-bottom: 1px solid #999;
+        color: #999;
+        font-size: 14px;
+      }
+      .gender-choose,
+      .marriage-choose {
+        // display: flex;
+        // align-items: center;
+        margin-left: 10px;
+        .single-radio {
+          width: 160px;
+          input[type='radio'] {
+            width: 14px;
+            height: 14px;
+            margin-right: 10px;
+            -webkit-appearance: radio;
+          }
+          span {
+            cursor: pointer;
+          }
+        }
+      }
+      .birthday-choose {
+        display: flex;
+        align-items: center;
+        .single-radio {
+          width: 120px;
+          position: relative;
+          margin-right: 30px;
+          border-bottom: 1px solid rgba(153, 153, 153, 1);
+          font-size: 14px;
+          color: #333;
+          span:nth-child(1) {
+            display: inline-block;
+          }
+          span:nth-child(2) {
+            width: 50px;
+            display: inline-block;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+          }
+          .iconxiala {
+            position: absolute;
+            font-size: 12px;
+            width: 12px;
+            height: 12px;
+            line-height: 12px;
+            display: block;
+            color: #999;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+          }
+          select {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+          }
+          .once-tell {
+            /*width: max-content;*/
+            white-space: nowrap;
+            position: absolute;
+            left: 0;
+            bottom: -10px;
+            transform: translateY(100%);
+            font-size: 12px;
+            color: #999;
+          }
+        }
+      }
+    }
+  .input-line {
+    padding: 10px 0;
+    //  margin-bottom: 20px;
+        width: 455px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .label {
+          font-size: 16px;
+          color: #333;
+        }
+        .input-box {
+          width: 315px;
+          border: 1px solid rgba(221, 221, 221, 1);
+          border-radius: 4px;
+          position: relative;
+          color: #111;
+          input[type='text'] {
+            width: 314px;
+            height: 38px;
+            line-height: 38px;
+            display: block;
+            -webkit-appearance: none;
+            border-radius: 4px;
+            border: 0;
+            outline: 0;
+            font-size: 16px;
+            padding: 0 13px;
+          }
+          textarea {
+            width: 315px;
+            height: 58px;
+            line-height: 29px;
+            display: block;
+            -webkit-appearance: none;
+            border-radius: 4px;
+            border: 0;
+            outline: 0;
+            font-size: 16px;
+            padding: 0 13px;
+            resize: none;
+          }
+          input[type='address'] {
+            width: 315px;
+            height: 32px;
+            line-height: 32px;
+            display: block;
+            -webkit-appearance: none;
+            border-radius: 4px;
+            border: 0;
+            outline: 0;
+            font-size: 14px;
+            padding: 0 13px;
+            background: #fff;
+          }
+          select {
+            position: absolute;
+            z-index: 9;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+          }
+          .iconxiala {
+            position: absolute;
+            font-size: 12px;
+            width: 12px;
+            height: 12px;
+            line-height: 12px;
+            display: block;
+            color: #aa8a7b;
+            left: 379px;
+            top: 50%;
+            transform: translateY(-50%);
+          }
+          .wrong-input {
+            color: #d9423e;
+          }
+          .wrong-alert {
+            position: absolute;
+            width: 109+7px;
+            height: 23px;
+            line-height: 23px;
+            text-align: center;
+            color: #d9423e;
+            background-image: url('../../../static/order/wrong-input.png');
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            top: 9px;
+            right: 19px;
+          }
+        }
+        .tel-special {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 420px;
+          .tel {
+            width: 290px;
+            input[type='text'] {
+              width: 288px;
+            }
+          }
+          .tel-area {
+            width: 120px;
+            height: 40px;
+            background: rgba(248, 248, 248, 1);
+            border: 1px solid rgba(221, 221, 221, 1);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            input {
+              width: 100%;
+              height: 100%;
+              line-height: 38px;
+              text-align: left;
+              background: #fff;
+              -webkit-appearance: none;
+              border: 0;
+              padding: 0 0 0 13px;
+              margin: 0;
+              outline: 0;
+            }
+            select {
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              opacity: 0;
+            }
+            .iconxiala {
+              position: absolute;
+              font-size: 12px;
+              width: 12px;
+              height: 12px;
+              line-height: 12px;
+              display: block;
+              color: #aa8a7b;
+              right: 12px;
+              top: 50%;
+              transform: translateY(-50%);
+            }
+          }
+        }
+        .border-change {
+          border: 1px solid rgba(170, 138, 123, 1);
+        }
+        .border-wrong {
+          border: 1px solid #d9423e;
+        }
+      }
+}
+</style>
+<style lang="less">
+.order{
+  .el-radio__input.is-checked .el-radio__inner {
+      border-color: #8b766c;
+      background: #8b766c;
+  }
+  .el-radio__input.is-checked+.el-radio__label{
+    color: #606266;
+  }
+  .el-radio__inner:hover {
+    border-color: #8b766c;
+  }
+  .el-select{
+    width: 70%;
+  }
+}
+
+.shopping-card-num{
+  display: inline-block;
+  // width: 18px;
+  // height: 18px;
+  // line-height: 18px;
+  margin-left: 4px;
+  font-size: 12px;
+}
+.add-shopping-card{
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 24px;
+  line-height: 22px;
+  padding: 0 14px;
+  font-size: 13px;
+  color: #f29b87;
+  border: 1px solid #f29b87;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.hint_pay{
+  position: absolute;
+  right: 80px;
+  top: 84px;
+  font-family: twCenMt;
+  font-size: 14px;
+  color: #aaa;
+  line-height: 24px;
+}
+.hint_pay span{
+  color: #f00;
+  font-size: 18px;
+  opacity: 0.6;
+}
+
+.needlogin{
+  position: absolute;
+  right: 175px;
+  top: 94px;
+  font-family: twCenMt;
+  font-size: 14px;
+  color: #aaa;
+  line-height: 24px;
+}
+// .hint_pay.en{
+//   top: 94px;
+// }
+
+.initial{
+	width: auto !important;
+}
+</style>
+<style>
+.v-modal{
+  z-index: 2000!important;
+}
+.el-upload-list__item {
+  transition: none !important;
+}
+.el-message{
+  z-index: 2010!important;
+}
+.hide .el-upload--picture-card {
+    display: none;
+}
+.el-upload{
+  /* width: 200px; */
+  /* height: 80px; */
+  border: solid 0.5px #cdcdcd!important;
+  background-color: #ffffff;
+}
+.el-upload-list--picture .el-upload-list__item.is-success .el-upload-list__item-name{
+  display: none;
+}
+.el-upload-list__item.is-success .el-upload-list__item-status-label{
+  display: none;
+}
+
+.pop-layer{
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1201;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.initial{
+	width: auto !important;
+}
+</style>

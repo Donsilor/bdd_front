@@ -1,0 +1,1370 @@
+<template>
+  <div class="order-detail">
+    <Header :title="lang.myOrder" />
+    <div class="content">
+      <div class="top">
+        <!--        <OrderHeader :list="statusSteps" :stepindex="step" />-->
+        <div v-if="info.orderStatus !== 0 && info.refundStatus == 0 && info.wireTransferStatus !== null" class="status-title">
+          <span class="order-status" v-if="info.orderStatus == 40">{{ statusText(info.orderStatus) }} </span>
+          <span class="order-status" v-else>{{ getTransferStatus(info.wireTransferStatus) }}</span>
+        </div>
+        <div v-else-if="info.refundStatus == 1" class="status-title">
+          {{ getRefundStatusText(info.refundStatus) }}
+        </div>
+        <div v-else class="status-title">
+          {{ statusText(info.orderStatus) }} 
+        </div>
+        <!-- <div v-if="info.wireTransferStatus == null && info.refundStatus == 0" class="status-title">
+          {{ statusText(info.orderStatus) }}
+        </div>
+        <div v-else-if="info.refundStatus == 1" class="status-title">
+          {{ getRefundStatusText(info.refundStatus) }}
+        </div>
+        <div v-else class="status-title">
+          {{ getTransferStatus(info.wireTransferStatus) }} 
+        </div> -->
+        <div class="service">
+          <ul>
+            <!-- <li v-if="info.wireTransferStatus == null && info.refundStatus == 0">{{ lang.orderStatus }}：{{ statusText(info.orderStatus) }}</li>
+            <li v-else-if="info.refundStatus == 1">{{ lang.orderStatus }}：{{ getRefundStatusText(info.refundStatus) }}</li>
+            <li v-else>{{ lang.orderStatus }}：{{ getTransferStatus(info.wireTransferStatus) }}</li> -->
+            <li v-if="info.orderStatus !== 0 && info.refundStatus == 0 && info.wireTransferStatus !== null">
+              <span class="order-status" v-if="info.orderStatus == 40">{{ lang.orderStatus }}：{{ statusText(info.orderStatus) }}</span>
+              <span class="order-status" v-else>{{ lang.orderStatus }}：{{ getTransferStatus(info.wireTransferStatus) }}</span>
+            </li>
+            <li v-else-if="info.refundStatus == 1">{{ lang.orderStatus }}：{{ getRefundStatusText(info.refundStatus) }}</li>
+            <li v-else>{{ lang.orderStatus }}：{{ statusText(info.orderStatus) }}</li>
+            <li>{{ lang.orderNumber }}：{{ info.orderNo }}</li>
+            <li>{{ lang.orderTime }}：{{ info.orderTime }}</li>
+            <li v-if="info.orderStatus !== 0">{{ lang.payType }}：{{ payType(info.payChannelText) }}</li>
+            <!-- <template v-if="info.orderStatus > 20 && info.orderStatus !== 50"> -->
+              <!-- <li>{{ lang.payTime }}：{{ info.payTime }}</li> -->
+            <!-- </template> -->
+          </ul>
+        </div>
+      </div>
+      <div class="details">
+        <div  class="single">
+          <div
+            v-for="(detail, n) in details"
+            :key="n"
+            class="products-item"
+            @click="toDetail(detail)"
+            >
+            <img :src="detail.image" />
+            <div v-if="detail.groupType !== 0" class="group-type">
+              {{ detail.groupTypeText }}
+            </div>
+
+            <!--              单品-->
+            <div v-if="detail.groupType === 0 && detail.data[0].categoryId !== 19" class="right single">
+              <h4>
+                {{ detail.goodsName }}
+              </h4>
+              <span>x 1</span>
+              <p>SKU：{{ detail.data[0].goodsCode }}</p>
+              <p>{{ getconfig(detail.data[0].detailSpecs,detail.data[0].goodsAttr,detail.data[0].lettering) }}</p>
+              <!-- <b>{{ formatCoin(info.coinCode) }} {{ detail.data[0].goodsPrice }}</b> -->
+              <div v-if="detail.data[0].couponInfo.type === 2">
+                <div class="old-price" >{{ formatCoin(info.coinCode) }} {{ detail.data[0].goodsPrice}}</div>
+                <b>{{ formatCoin(info.coinCode) }} {{ detail.data[0].goodsPayPrice }}</b>
+              </div>
+              <b v-else>{{ formatCoin(info.coinCode) }} {{ detail.data[0].goodsPrice }}</b>
+            </div>
+
+            <!--              对戒-->
+            <div v-if="detail.data[0].categoryId == '19'" class="right double">
+              <div class="dec" v-for="(ring, _n) in detail.data[0].ring" :key="_n">
+                <h4>
+                  {{ detail.goodsName }}
+                </h4>
+                <!-- <span>x 1</span> -->
+                <p class="sku">SKU：{{ detail.data[0].goodsCode }}</p> 
+                <p>{{ getDubleConfig(ring.lang.goods_spec,ring.lang.goods_attr[26].value,ring,detail.data[0].goodsAttr) }}</p>
+                <!-- <b>{{ info.coinCode }} {{ detail.data[0].goodsPrice }}</b> -->
+                <!-- <p>SKU：{{ detail.data[1] && detail.data[1].goodsCode }}</p>
+                <p>{{ detail.data[1] && detail.data[1].detailSpecs }}</p>
+                <b
+                  >{{ info.coinCode }}
+                  {{ detail.data[1] && detail.data[1].goodsPrice }}</b
+                > -->
+              </div> 
+              <div class="num">
+                <span>x 1</span>
+              </div>
+              <div class="price">
+                <div v-if="detail.data[0].couponInfo.type === 2">
+                  <div class="old-price" >{{ formatCoin(info.coinCode) }} {{ detail.data[0].goodsPrice}}</div>
+                  <b>{{ formatCoin(info.coinCode) }} {{ detail.data[0].goodsPayPrice }}</b>
+                </div>
+                <b v-else>{{ formatCoin(info.coinCode) }} {{ detail.data[0].goodsPrice }}</b>
+              </div>
+            </div>
+
+            <!--              定制-->
+            <div v-if="detail.groupType === 2" class="right customization">
+              <h4 class="order-ellipsis">
+                {{ detail.data[0].goodsName }}
+              </h4>
+              <span>x 1</span>
+              <p>SKU：{{ detail.data[0].goodsCode }}</p>
+              <p>{{ detail.data[0].detailSpecs }}</p>
+              <div v-if="detail.data[0].couponInfo.type === 2">
+                <div class="old-price" >{{ formatCoin(info.coinCode) }} {{ detail.data[0].goodsPrice}}</div>
+                <b>{{ formatCoin(info.coinCode) }} {{ detail.data[0].goodsPayPrice }}</b>
+              </div>
+              <b v-else>{{ formatCoin(info.coinCode) }} {{ detail.data[0].goodsPrice }}</b>
+              <h4 class="order-ellipsis">
+                {{ detail.data[1].goodsName }}
+              </h4>
+              <p>SKU：{{ detail.data[1] && detail.data[1].goodsCode }}</p>
+              <p>{{ detail.data[1] && detail.data[1].detailSpecs }}</p>
+              <div v-if="detail.data[1].couponInfo.type === 2">
+                <div class="old-price" >{{ formatCoin(info.coinCode) }} {{ detail.data[1].goodsPrice}}</div>
+                <b>{{ formatCoin(info.coinCode) }} {{ detail.data[1].goodsPayPrice }}</b>
+              </div>
+              <b v-else>{{ formatCoin(info.coinCode) }} {{ detail.data[1].goodsPrice }}</b>
+            </div>
+          </div>
+        </div>
+        
+
+       <!--        发货信息-->
+        <div v-if="info.express" class="bundle-item">
+	     <div class="bundle-info">
+            <div class="bundle-status">{{ lang.hadSend }}</div>
+            <div class="bundle-company">
+              <span>{{ lang.logistics }}：{{ info.express.companyName }}</span>
+
+            </div>
+            <div class="bundle-code">
+              {{ lang.logisticsNumber }}：{{ info.express.expressNo }}
+            </div>
+            <!-- <div class="bundle-time">
+              {{ lang.sendTime }}：{{ info.express.delivery_time }}
+            </div> -->
+          </div>
+	    </div>
+
+        <!--        已发货商品-->
+		<!--
+        <div v-for="(bundle, n) in outDetails" :key="n" class="bundle-item">
+          <div class="bundle-info">
+            <div class="bundle-status">{{ lang.hadSend }}</div>
+            <div class="bundle-company">
+              <span>{{ lang.logistics }}：{{ bundle.companyName }}</span>
+              <span>{{ lang.checkLogistics }} ></span>
+            </div>
+            <div class="bundle-code">
+              {{ lang.logisticsNumber }}：{{ bundle.expressNo }}
+            </div>
+            <div class="bundle-time">
+              {{ lang.sendTime }}：{{ bundle.createTime }}
+            </div>
+          </div>
+          <div class="bundle-details">
+            <div
+              v-for="(detail, m) in bundle.outOrderDetails"
+              :key="m"
+              class="detail-item"
+              @click="toDetail(detail)"
+            >
+              <img :src="detail.image" />
+              <div v-if="detail.groupType !== 0" class="group-type">
+                {{ detail.groupTypeText }}
+              </div>
+
+                  单品
+              <div v-if="detail.groupType === 0" class="right">
+                <h4>
+                  {{ detail.goodsName }}
+                </h4>
+                <span>x 1</span>
+                <p>SKU：{{ detail.data[0].goodsCode }}</p>
+                <p>{{ detail.data[0].detailSpecs }}</p>
+                <b>{{ info.coinCode }} {{ detail.data[0].goodsPrice }}</b>
+              </div>
+
+                       对戒
+              <div v-if="detail.groupType === 1" class="right">
+                <h4>
+                  {{ detail.goodsName }}
+                </h4>
+                <span>x 1</span>
+                <p>SKU：{{ detail.data[0].goodsCode }}</p>
+                <p>{{ detail.data[0].detailSpecs }}</p>
+                <b>{{ info.coinCode }} {{ detail.data[0].goodsPrice }}</b>
+                <p>SKU：{{ detail.data[1] && detail.data[1].goodsCode }}</p>
+                <p>{{ detail.data[1] && detail.data[1].detailSpecs }}</p>
+                <b
+                  >{{ info.coinCode }}
+                  {{ detail.data[1] && detail.data[1].goodsPrice }}</b
+                >
+              </div>
+
+                           定制
+              <div v-if="detail.groupType === 2" class="right">
+                <h4 class="order-ellipsis">
+                  {{ detail.data[0].goodsName }}
+                </h4>
+                <span>x 1</span>
+                <p>SKU：{{ detail.data[0].goodsCode }}</p>
+                <p>{{ detail.data[0].detailSpecs }}</p>
+                <b>{{ info.coinCode }} {{ detail.data[0].goodsPrice }}</b>
+                <h4 class="order-ellipsis">
+                  {{ detail.data[1].goodsName }}
+                </h4>
+                <p>SKU：{{ detail.data[1] && detail.data[1].goodsCode }}</p>
+                <p>{{ detail.data[1] && detail.data[1].detailSpecs }}</p>
+                <b
+                  >{{ info.coinCode }}
+                  {{ detail.data[1] && detail.data[1].goodsPrice }}</b
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+         -->
+      </div>
+
+      <div class="invoice" v-show="invoice && invoice.invoiceTitle">
+        <!-- <p class="title">发票信息</p> -->
+        <ul>
+
+          <template v-if="!invoice.isElectronic">
+            <li>{{ lang2.InvoiceType }}：{{ lang2.PaperInvoice }}</li>
+          </template>
+          <template v-else>
+            <li>{{ lang2.InvoiceType}}：{{ lang2.ElectronicInvoice }}</li>
+          </template>
+          <template v-if="invoice.invoiceType == 2">
+            <li>{{ lang2.HeaderType }}：{{ lang2.personal }}</li>
+          </template>
+          <template v-if="invoice.invoiceType == 1">
+            <li>{{ lang2.HeaderType}}：{{ lang2.company }}</li>
+          </template>
+          <li>{{ lang2.Invoice }}：{{ invoice.invoiceTitle }}</li>
+          <li>{{ lang2.TaxID }}：{{ invoice.taxNumber }}</li>
+          <li v-show="invoice.isElectronic == 1">{{ lang2.email }}：{{ invoice.email }}</li>
+        </ul>
+      </div>
+      <div class="footer">
+        <div class="more">
+          <div class="address">
+            <i class="icon iconfont icon_shoujianxinxi"></i>
+            <h6>
+              {{ info.address && info.address.firstName }}
+              {{ info.address && info.address.lastName }}
+            </h6>
+            <h6>{{ info.address && info.address.userTel }}</h6>
+            <p>
+              {{ info.address && info.address.countryName }}
+              {{ info.address && info.address.provinceName }}
+              {{ info.address && info.address.cityName }}
+              {{ info.address && info.address.address }}
+            </p>
+            <p>{{ info.address && info.address.zipCode }}</p>
+            <p>{{ info.address && info.address.userMail }}</p>
+          </div>
+          <div class="express">
+            <i class="icon iconfont icon_songhuozhengce"></i>
+            <h6 v-if="info.allSend === 1">{{ lang.sendTogether }}</h6>
+            <p>
+              {{ lang.shippingTime }}
+              <nuxt-link :to="{ name: 'help-pages-deliveryPolicy' }">{{
+                lang.checkSendPolicy
+              }}</nuxt-link>
+            </p>
+            <p>
+              {{ lang.voucherEmail }}：{{ info.afterMail && info.afterMail }}
+            </p>
+            <p>{{ lang.mark }}：{{ info.userRemark }}</p>
+          </div>
+        </div>
+        <ul class="price">
+          <li>
+            <span>{{ lang.productsCount }}： </span
+            ><span>{{ formatCoin(info.coinCode) }} {{ productsPrice }} </span>
+          </li>
+		  <!-- <li v-for="item in cardList">
+		    <span>{{ lang.shoppingCard }}：
+					<em :class="info.orderStatus == 0 ? 'card-color' : ''">
+						({{ cardLengthDispose(item.sn) }})&nbsp;&nbsp;<i v-if="info.orderStatus == 0" style="font-style: normal;">(已解绑)</i>
+					</em>
+				</span>
+			<span class="active">-{{ formatCoin(info.coinCode) }} {{ item.useAmount }} </span>
+		  </li> -->
+          <li v-if="info.preferFee" class="active">
+            <span>{{ lang.offer }}： </span
+            ><span>-{{ formatCoin(info.coinCode) }} {{ info.preferFee }} </span>
+          </li>
+          <li>
+            <span>{{ lang.freight }}： </span
+            ><span>+{{ formatCoin(info.coinCode) }} {{ info.logisticsFee }} </span>
+          </li>
+          <li>
+            <span>{{ lang.taxes }}： </span
+            ><span>+{{ formatCoin(info.coinCode) }} {{ info.taxFee }} </span>
+          </li>
+          <li>
+            <span>{{ lang.insurance }}： </span
+            ><span>+{{ formatCoin(info.coinCode) }} {{ info.safeFee }} </span>
+          </li>
+          <li v-if="info.transPreferFee" class="active">
+            <span>{{ lang.transPreferFee }}： </span
+            ><span>-{{ formatCoin(info.coinCode) }} {{ info.transPreferFee }} </span>
+          </li>
+          <li>
+            <span>{{ lang.orderCount }}:</span
+            ><span
+              ><em>{{ formatCoin(info.coinCode) }} </em>{{ info.orderAmount }}
+            </span>
+          </li>
+          <li v-if="info.discountAmount != 0" class="active">
+            <span>{{ lang.discountedAmount }}:</span
+            ><span>-{{ formatCoin(info.coinCode) }} {{ info.discountAmount }} </span>
+          </li>
+          <li v-if="info.couponAmount != 0" class="active">
+            <span>{{ lang.couponAmount }}:</span
+            ><span>-{{ formatCoin(info.coinCode) }} {{ info.couponAmount }} </span>
+          </li>
+          <li v-for="(item, i) in cardList" :key="i" >
+            <span>{{ lang.shoppingCard }}：
+              <em :class="info.orderStatus == 0 ? 'card-color' : ''">
+                ({{ cardLengthDispose(item.sn) }})&nbsp;&nbsp;<i v-if="info.orderStatus == 0" style="font-style: normal;">({{ lang.Untied }})</i>
+              </em>
+            </span>
+            <span class="active">-{{ formatCoin(info.coinCode) }} {{ item.useAmount }} </span>
+          </li>
+          <div class="all">
+            <span>{{info.orderStatus == 0 || info.orderStatus == 10 ? lang.NeedPay : lang.ultimatelyPay }}： </span>
+            <span v-if="this.$store.state.platform == 41 && info.coinCode == 'TWD'"><em>{{ formatCoin(info.coinCode) }} </em>{{ formatAmount(info.payAmount) }} </span>
+            <span v-else><em>{{ formatCoin(info.coinCode) }} </em>{{ info.payAmount }} </span>
+          </div>
+        </ul>
+        <div class="btn">
+          <div
+            v-if="[1].indexOf(info.orderStatus) > -1 && info.payChannel === 1 "
+            class="btn-block"
+            @click.stop="paytips = !paytips"
+          >
+            {{ lang.paytips }}
+          </div>
+          <div
+            v-if="(info.orderStatus) > 0 && (info.orderStatus)<20 && info.wireTransferStatus == null && info.refundStatus == 0"
+            class="btn-block"
+            @click="goPay(info)"
+          >
+            {{ lang.toPay }}
+          </div>
+          <div
+            v-if="(info.orderStatus) > 0 && (info.orderStatus)<20 && info.wireTransferStatus == null && info.refundStatus == 0"
+            class="btn-white"
+            @click="cancelOrder"
+          >
+            {{ lang.cancelOrder }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <PayTips v-if="paytips" @close="paytips = !paytips" />
+  </div>
+</template>
+
+<script>
+import Moment from 'moment'
+import Header from '@/components/personal/header.vue'
+// import OrderHeader from '@/components/personal/orderheader.vue'
+import PayTips from '@/components/cart/paytips.vue'
+
+export default {
+  name: 'OrderDetail',
+  layout: 'no-footer-bar',
+  components: {
+    Header,
+    // OrderHeader,
+    PayTips
+  },
+  data() {
+    return {
+      lang: this.LANGUAGE.personal.orderDetail,
+      lang2: this.LANGUAGE.cart.invoice,
+      info: {},
+      paytips: false,
+      invoice:{},
+      cardList: []
+    }
+  },
+  computed: {
+    statusSteps() {
+      const status = this.info.orderStatus
+      const result = [
+        { step: '1', title: this.lang.submit },
+        { step: '2', title: this.lang.waitingPay },
+        { step: '3', title: this.lang.waitingSend },
+        { step: '4', title: this.lang.waitingReceive },
+        { step: '5', title: this.lang.hadFinish }
+      ]
+
+      if (status >= 20) {
+        result[1].title = this.lang.hadPay
+      }
+      if (status >= 40) {
+        result[2].title = this.lang.hadSend
+      }
+      if (status >= 50) {
+        result[3].title = this.lang.hadReceive
+        result[4].title = this.lang.hadFinish
+      }
+      return result
+      // console.log("result",result)
+    },
+    step() {
+      const status = this.info.orderStatus
+      let result = 1
+      // 1-未付款,2-已付款,3-已发货,4-已完成,5-未评论,6-已评论,7-退货申请,8-退货中,9-已退货,10-取消交易
+      // if (['', null, 0, 1].indexOf(status) > -1) {
+      //   result = 0
+      // } else if ([2].indexOf(status) > -1) {
+      //   result = 1
+      // } else if ([3].indexOf(status) > -1) {
+      //   result = 2
+      // } else if ([4].indexOf(status) > -1) {
+      //   result = 3
+      // } else if ([5, 6, 7, 8, 9].indexOf(status) > -1) {
+      //   result = 4
+      // }
+
+      if (status >= 20) {
+        result = 2
+      }
+      if (status >= 30) {
+        result = 3
+      }
+      if (status >= 4) {
+        result = 4
+      }
+      return result
+    },
+    productsPrice() {
+      return this.info.productAmount
+      // let result = 0
+      // const details = this.details || []
+      // const outDetails = this.outDetails || []
+      // details.forEach(item => {
+      //   result += item.goodsPrice || 0
+      // })
+      // outDetails.forEach(item => {
+      //   const orderDetails = item.outOrderDetails || []
+      //   orderDetails.forEach(group => {
+      //     result += group.goodsPrice || 0
+      //   })
+      // })
+      // return result.toFixed(2)
+    },
+    details() {
+      const data = JSON.parse(
+        JSON.stringify(this.info.details ? this.info.details : [])
+      )
+      const result = this.dealDetailsData(data)
+      // console.log("detail",result)
+      return result
+    },
+    outDetails() {
+      let data = JSON.parse(
+        JSON.stringify(this.info.outDetails ? this.info.outDetails : [])
+      )
+      data = data.map(item => {
+        if (item.outOrderDetails && item.outOrderDetails instanceof Array) {
+          item.outOrderDetails = this.dealDetailsData(item.outOrderDetails)
+        }
+        item.createTime = Moment(item.createTime).format('YYYY/MM/DD HH:mm:ss')
+        item.payTime = Moment(item.payTime).format('YYYY/MM/DD HH:mm:ss')
+        return item
+      })
+      return data
+    },
+    payType(n) {
+      return function(n) {
+        return this.lang[n]
+      }
+    }
+  },
+  mounted() {
+    // console.log("inoo",this.invoice)
+    const _this = this
+    _this.$nextTick(() => {
+      _this.getInfo()
+    })
+  },
+  methods: {
+    getconfig(detailSpecs,attr,lettering){
+      // console.log("fffffff",attr)
+      let text = ''
+      if (attr.length > 0) {
+        attr.map((item, index) => {
+          if (index === attr.length - 1) {
+            text = text + item.configAttrIVal
+          } else {
+            text = text + item.configAttrIVal + ' /  '
+          }
+        })
+        text = detailSpecs + ' /  '+ text 
+      }else {
+        text = detailSpecs
+      }
+      // 刻字
+      if(lettering){
+        text = text+' /  '+ lettering 
+      }
+      // console.log("fffffff",text)
+      return text
+    },
+    // 对戒属性数值转化成字符串
+    getDubleConfig(good_spec,goods_attr,ring,attr) {
+      let attrs = []
+      ring.lang.goods_spec.forEach((item,a) => {
+        attrs.push(item)
+      })
+      attr.forEach((i,a) => {
+        if (ring.id == i.goodsId) {
+          i.attr_value = i.configAttrIVal
+          attrs.push(i)
+        }
+      })
+      let text = ''
+      if (attrs.length > 0) {
+        attrs.map((item, index) => {
+          if (index === attrs.length - 1) {
+            text = text + item.attr_value
+          } else {
+            text = text + item.attr_value + ' /  '
+          }
+        }) 
+      }
+
+      if (goods_attr) {
+       for (let i in goods_attr) {
+          text = text + ' /  '+goods_attr[i] 
+        }
+      }
+      return text
+    },
+    statusText(status) {
+      const map = {
+        0: this.lang.cancelOrder,
+        10: this.lang.hadNotPay,
+        20: this.lang.hadPay,
+        30: this.lang.waitingSend,
+        40: this.lang.hadSend,
+        50: this.lang.hadFinish,
+      }
+    // console.log("detail_stutas", map)
+      return map[status]
+    },
+    getTransferStatus(transferStatus){
+      const transferStatus_value = {
+        0 : this.lang.pending,
+        1 : this.lang.hadPay,
+        10 : this.lang.payfailed
+      };
+      return transferStatus_value[transferStatus];
+    },
+    getRefundStatusText(refundStatus){
+      const refundStatus_value = {
+        1 : this.lang.hadClosed
+      };
+      return refundStatus_value[refundStatus];
+    },
+    payChannelText(payChannel) {
+      const map = {
+        0: '待支付',       // 待支付
+        1: 'payType1',     // 微信
+        2: 'payType2',     // 支付宝
+        3: 'payType3',     // 银联
+        4: 'payType4',     // 小程序
+        5: 'payType5',     // 余额
+        6: 'payType6',     // Paypal
+        61: 'payType7',    // Paypal Card
+        7:  'payType8',    // 支付宝国际版
+        81: 'payType9',    // Paydollor 银联
+        82: 'payType10',   // Paydollor 支付宝
+        83: 'payType11',   // Paydollor 微信
+        84: 'payType12',   // Paydollor 支付宝HK
+        10: 'payType13',   // CARD
+        11: 'payType14',   // WireTransfer(电汇)
+        100: 'payType15'   // OFFLINE(线下)
+        
+      }
+      return map[payChannel]
+    },
+    dealDetailsData(details = []) {
+      details = JSON.parse(JSON.stringify(details || []))
+
+      // 以joinCartTime为下标，组合对戒和定制
+      const groups = {}
+      const result = []
+
+      details.map(good => {
+        if (groups.hasOwnProperty(good.joinCartTime)) {
+          // 将数据处理为直接可用的数据
+          good.detailSpecs = JSON.parse(good.detailSpecs || '[]')
+            .map(item => {
+              return item.value
+            })
+            .join(' / ')
+          // groups[good.joinCartTime].goodsPrice += good.goodsPrice
+          groups[good.id].data.push(good)
+        } else {
+          const newGroup = {
+            id: `${good.orderId}-${good.joinCartTime}`,
+            image: good.goodsImages,
+            groupType: good.groupType,
+            groupTypeText: this.lang.singleProduct,
+            goodsName: good.goodsName,
+            goodsPrice: good.goodsPrice
+          }
+
+          if ([null, 0, '0'].indexOf(good.groupType) > -1) {
+            // 单品
+            newGroup.groupType = 0
+            newGroup.groupTypeText = this.lang.singleProduct
+          }
+          if (good.groupType === 1) {
+            // 對戒
+            newGroup.groupType = 1
+            newGroup.groupTypeText = this.lang.pairRing
+            newGroup.goodsName = good.ringName || this.lang.defaultPairRing
+            newGroup.image = good.ringImg || '/marriage-ring/default.png'
+          }
+          if (good.groupType === 2) {
+            // 定制
+            newGroup.groupType = 2
+            newGroup.groupTypeText = this.lang.diy
+          }
+
+          // 将数据处理为直接可用的数据
+          good.detailSpecs = JSON.parse(good.detailSpecs || '[]')
+            .map(item => {
+              return item.value
+            })
+            .join(' / ')
+
+          newGroup.data = [good]
+          newGroup.image = this.imageStrToArray(newGroup.image)[0]
+
+          groups[good.id] = newGroup
+        }
+      })
+
+      let keys = Object.keys(groups)
+      keys = keys.sort((a, b) => {
+        return b - a
+      })
+      keys.forEach(item => {
+        result.push(groups[item])
+      })
+
+      // 将定制的商品进行排序，钻石放在后面
+      result.map(item => {
+        // console.log('item====>', item)
+        if (item.groupType === 2) {
+          // 定制
+          const diamond = []
+          const pedestal = []
+          item.data.forEach(detail => {
+            if (detail.categoryId === 1) {
+              diamond.push(detail)
+            } else {
+              pedestal.push(detail)
+            }
+          })
+          item.data = pedestal.concat(diamond)
+          item.goodsName = pedestal[0].goodsName
+          item.image = this.imageStrToArray(pedestal[0].goodsImages)[0]
+        }
+        return item
+      })
+      // console.log("result",result)
+      return result
+    },
+    getInfo() {
+      this.$axios({
+        method: `get`,
+        url: `/web/member/order/detail`,
+        params: {
+          orderId: this.$route.query.orderId
+        }
+      })
+        .then(data => {
+          data.orderTime = Moment(data.orderTime* 1000).format('YYYY/MM/DD HH:mm:ss')
+          data.payChannelText = data.payChannel
+            ? this.payChannelText(data.payChannel)
+            : data.orderStatus > 1
+            ? this.lang.cableTransfer
+            : ''
+          data.payTime = data.payTime
+            ? Moment(data.payTime).format('YYYY/MM/DD HH:mm:ss')
+            : ''
+          this.info = data
+          // console.log("this.info",this.info)
+          this.invoice = data.invoice
+          this.cardList = data.cards
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    },
+    // 去支付
+    goPay(val) {
+      const res = {
+        coinType: val.coinCode, // 支付币种 ,
+        payAmount: val.payAmount, // 支付金额 ,
+        orderId: val.id // 订单ID
+      }
+      this.$router.push({
+        name: 'cart-pay',
+        query: {
+          info: JSON.stringify(res)
+        }
+      })
+      // console.log(val)
+    },
+    // 取消订单
+    cancelOrder() {
+      const _this = this
+      _this.$ConfirmBox({
+        // title: _this.lang.caveat,
+        message: _this.lang.confirmCancellationOrder,
+        buttons: [
+          {
+            text: _this.lang.cancel,
+            callback: () => {
+              // console.log('点击了取消')
+            }
+          },
+          {
+            text: _this.lang.clear,
+            callback: () => {
+              _this.$store
+                .dispatch('cancelOrder', _this.info.id)
+                .then(data => {
+                  _this.$toast(_this.lang.canceled)
+                  setTimeout(() => {
+                    window.location.reload()
+                  }, 1000)
+                })
+                .catch(err => {
+                  _this.$toast(`${err.message}`)
+                })
+            }
+          }
+        ]
+      })
+    },
+    switchName(i) {
+      const num = parseInt(i)
+      switch (num) {
+        case 1:
+          return `diamond`
+        case 2:
+          return `ring`
+        case 4:
+          return `necklace`
+        case 8:
+          return `bracelet`
+      }
+    },
+    toDetail(info) {
+      let routerName = ''
+      let routerQuery = {}
+
+      if ([null, 0, ''].indexOf(info.groupType) > -1) {
+        // console.log('单品')
+
+        const goodId = info.data[0].goodsId
+        const ringRouter = configAttrId => {
+          // console.log('configAttrId====>', configAttrId)
+          if (configAttrId === 60) {
+            // 訂婚戒指
+            routerName = 'engagement-engagement-rings'
+            routerQuery = {
+              goodId: goodId
+            }
+            return
+          }
+          if (configAttrId === 461 || configAttrId === 462) {
+            // 男女戒
+            routerName = 'marriage-ring-single-ring-detail'
+            routerQuery = {
+              goodId: goodId,
+              ringType : 'single'
+            }
+            return
+          }
+          if (configAttrId === 59) {
+            // 結婚戒指
+            routerName = 'marriage-ring-single-ring-detail'
+            routerQuery = {
+              goodId: goodId,
+              ringType : 'single'
+            }
+            return
+          }
+          if (configAttrId === 61) {
+            // 裝飾戒指
+            routerName = 'marriage-ring-single-ring-detail'
+            routerQuery = {
+              goodId: goodId,
+              ringType : 'single'
+            }
+            return
+          }
+          // console.log('都不是-')
+        }
+
+        switch (info.data[0].categoryId) {
+          case 15:
+            // 钻石
+            routerName = 'diamond-diamonds'
+            routerQuery = {
+              goodId: goodId
+            }
+            break
+          case 2:
+            // 戒指
+            // ringRouter(info.data[0].specs[0].configAttrId)
+            // ringRouter(info.data[0].configAttrId)
+            routerName = 'marriage-ring-single-ring-detail'
+            routerQuery = {
+              goodId: goodId,
+              ringType : 'single'
+            }
+            break
+          case 3:
+            // 珠宝饰品
+            routerName = 'accessories-accessories'
+            routerQuery = {
+              goodId: goodId
+            }
+            break
+          case 4:
+            // 项链
+            routerName = 'accessories-accessories'
+            routerQuery = {
+              goodId: goodId
+            }
+            break
+          case 5:
+            // 吊坠
+            routerName = 'accessories-accessories'
+            routerQuery = {
+              goodId: goodId
+            }
+            break
+          case 6:
+            // 耳钉
+            routerName = 'accessories-accessories'
+            routerQuery = {
+              goodId: goodId
+            }
+            break
+          case 7:
+            // 耳环
+            routerName = 'accessories-accessories'
+            routerQuery = {
+              goodId: goodId
+            }
+            break
+          case 8:
+            // 手链
+            routerName = 'accessories-accessories'
+            routerQuery = {
+              goodId: goodId
+            }
+            break
+          case 9:
+            // 手镯
+            routerName = 'accessories-accessories'
+            routerQuery = {
+              goodId: goodId
+            }
+            break
+          case 12:
+            //戒托--订婚戒指
+            routerName = 'engagement-engagement-rings'
+            routerQuery = {
+              goodId: goodId
+            }
+            break
+          case 19:
+            //戒指--对戒
+            routerName = 'marriage-ring-pair-ring-detail'
+            routerQuery = {
+              goodId: goodId,
+              ringType : 'pair'
+            }
+            break
+
+        }
+      }
+      if ([1].indexOf(info.groupType) > -1) {
+        // console.log('对戒')
+        // console.log('info====>', info)
+        routerName = 'marriage-ring-pair-ring-detail'
+        routerQuery = {
+          goodId: info.data[0].groupId,
+          ringType : 'pair'
+        }
+      }
+      if ([2].indexOf(info.groupType) > -1) {
+        // console.log('定制')
+        const obj = {
+          steps: [
+            {
+              goodsId: info.data[0].goodsId,
+              goodsDetailsId: null,
+              ct: info.data[0].categoryId,
+              cartId: ``,
+              page: `detail`
+            },
+            {
+              goodsId: null,
+              goodsDetailsId: null,
+              ct: null,
+              cartId: ``,
+              page: `list`
+            }
+          ]
+        }
+
+        const typeName = this.switchName(info.data[0].categoryId)
+        routerName = `custom-made-${typeName}-made-${typeName}-detail`
+        routerQuery = {
+          melo: this.$helpers.base64Encode(JSON.stringify(obj)),
+          step: 1,
+          goodId: info.data[0].goodsId
+        }
+      }
+
+      this.$router.push({
+        name: routerName,
+        query: routerQuery
+      })
+    },
+    cardLengthDispose(num){
+      num = num.slice(0,3)+'...'+num.slice(-3)
+      return num;
+    }
+  }
+}
+</script>
+
+<style scoped lang="less">
+.order-detail {
+  .content {
+    background: rgba(244, 244, 244, 1);
+    .top {
+      padding: 10px 0 10px;
+      background-color: #ffffff;
+      .status-title {
+        width: 345px;
+        margin: auto;
+        font-size: 20px;
+        font-weight: 500;
+        color: rgba(51, 51, 51, 1);
+        text-align: left;
+      }
+      .service {
+        width: 345px;
+        margin: 14px auto 0;
+        padding: 20px 14px;
+        background: rgba(248, 244, 241, 1);
+        border-radius: 5px;
+        font-size: 12px;
+        line-height: 22px;
+        font-weight: 400;
+        text-align: left;
+        color: rgba(148, 116, 101, 1);
+      }
+    }
+    .invoice {
+        width: 355px;
+        margin: 0px auto 10px;
+        padding: 10px 18px;
+        background: #fff;
+        border-radius: 5px;
+        font-size: 12px;
+        line-height: 22px;
+        font-weight: 400;
+        text-align: left;
+        color: rgba(148, 116, 101, 1);
+      }
+    .details {
+      padding: 10px;
+      box-sizing: border-box;
+      .products-item {
+        position: relative;
+        padding: 24px 16px 14px 16px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        /*border-bottom: 1px solid #f5f5f5;*/
+        border-radius: 5px;
+        background-color: #ffffff;
+
+        &:nth-last-of-type(1) {
+          margin-bottom: 0;
+        }
+
+        img {
+          float: left;
+          width: 75px;
+          height: 75px;
+        }
+        .group-type {
+          position: absolute;
+          top: 100px;
+          left: 53.5px;
+          /*width: 36px;*/
+          height: 16px;
+          padding: 0 4px;
+          text-align: center;
+          background: rgba(245, 240, 236, 1);
+          border: 1px solid rgba(215, 202, 196, 1); /*no*/
+          border-radius: 2px;
+          font-size: 12px;
+          font-weight: 400;
+          color: rgba(148, 116, 101, 1);
+          transform: translate(-50%, 0);
+        }
+        .double{
+          position: relative;
+          .dec{
+            // margin-bottom: 10px;
+          }
+          .dec:nth-child(2){
+            h4{
+              display: none;
+            }
+            .sku{
+              display: none;
+            }
+          }
+          .num{
+            position: absolute;
+            right:0;
+            top:0;
+          }
+        }
+        .right {
+          width: 230px;
+          margin-left: 90px;
+          text-align: left;
+          .old-price{
+            color: #b2b2b2;
+            text-decoration: line-through;
+            margin-bottom: 0.053333rem;
+            font-size: 12px;
+            margin-top: 10px;
+          }
+          h4 {
+            position: relative;
+            display: inline-block;
+            width: 180px;
+            max-height: 36px;
+            font-size: 14px;
+            line-height: 18px;
+            font-family: PingFangHK-Regular;
+            font-weight: 400;
+            color: rgba(51, 51, 51, 1);
+          }
+          span {
+            float: right;
+            font-size: 14px;
+            font-weight: 400;
+            color: rgba(102, 102, 102, 1);
+          }
+          p {
+            font-size: 13px;
+            line-height: 24px;
+            font-weight: 400;
+            color: rgba(153, 153, 153, 1);
+          }
+          b {
+            margin-bottom: 10px;
+            font-size: 17px;
+            line-height: 20px;
+            font-weight: 400;
+            color: rgba(243, 163, 145, 1);
+            font-family: twCenMt;
+            display: block;
+          }
+          .btn-type {
+            width: 36px;
+            height: 16px;
+            margin-left: -74px;
+            text-align: center;
+            background: rgba(245, 240, 236, 1);
+            border: 1px solid rgba(215, 202, 196, 1); /*no*/
+            border-radius: 2px;
+            font-size: 12px;
+            font-weight: 400;
+            color: rgba(148, 116, 101, 1);
+          }
+        }
+      }
+      .bundle-item {
+        position: relative;
+        padding: 24px 16px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        /*border-bottom: 1px solid #f5f5f5;*/
+        border-radius: 5px;
+        background-color: #ffffff;
+
+        &:nth-last-of-type(1) {
+          margin-bottom: 0;
+        }
+        .bundle-info {
+          padding-bottom: 5px;
+          border-bottom: 1px solid rgba(221, 221, 221, 1);
+          .bundle-status {
+            margin-bottom: 12px;
+            height: 14px;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(51, 51, 51, 1);
+            text-align: left;
+          }
+          .bundle-company,
+          .bundle-code,
+          .bundle-time {
+            margin-bottom: 7px;
+            height: 12px;
+            font-size: 12px;
+            font-weight: 400;
+            color: rgba(102, 102, 102, 1);
+            text-align: left;
+
+            .span:nth-of-type(2) {
+              color: rgba(148, 116, 101, 1);
+            }
+          }
+        }
+        .bundle-details {
+          padding-top: 24px;
+          .detail-item {
+            padding-bottom: 24px;
+            position: relative;
+
+            &:nth-last-of-type(1) {
+              padding-bottom: 0;
+            }
+            img {
+              float: left;
+              width: 75px;
+              height: 75px;
+            }
+            .group-type {
+              position: absolute;
+              top: 100px;
+              left: 20px;
+              width: 36px;
+              height: 16px;
+              text-align: center;
+              background: rgba(245, 240, 236, 1);
+              border: 1px solid rgba(215, 202, 196, 1);
+              border-radius: 2px;
+              font-size: 12px;
+              font-weight: 400;
+              color: rgba(148, 116, 101, 1);
+            }
+            .right {
+              width: 230px;
+              margin-left: 90px;
+              text-align: left;
+              h4 {
+                position: relative;
+                display: inline-block;
+                width: 180px;
+                max-height: 36px;
+                font-size: 14px;
+                line-height: 18px;
+                font-family: PingFangHK-Regular;
+                font-weight: 400;
+                color: rgba(51, 51, 51, 1);
+              }
+              span {
+                float: right;
+                font-size: 14px;
+                font-weight: 400;
+                color: rgba(102, 102, 102, 1);
+              }
+              p {
+                font-size: 13px;
+                line-height: 24px;
+                font-weight: 400;
+                color: rgba(153, 153, 153, 1);
+              }
+              b {
+                margin-bottom: 10px;
+                font-size: 17px;
+                line-height: 20px;
+                font-weight: 400;
+                color: rgba(243, 163, 145, 1);
+                font-family: twCenMt;
+                display: block;
+              }
+              .btn-type {
+                width: 36px;
+                height: 16px;
+                margin-left: -74px;
+                text-align: center;
+                background: rgba(245, 240, 236, 1);
+                border: 1px solid rgba(215, 202, 196, 1);
+                border-radius: 2px;
+                font-size: 12px;
+                font-weight: 400;
+                color: rgba(148, 116, 101, 1);
+              }
+            }
+          }
+        }
+      }
+    }
+    .footer {
+      width: 100%;
+      padding: 0 10px;
+      box-sizing: border-box;
+      display: inline-block;
+      background: #f2f2f2;
+      .more {
+        width: 100%;
+        padding: 20px 26px 40px;
+        background: #ffffff;
+        border-radius: 8px;
+        .express,
+        .address {
+          text-align: left;
+          .icon {
+            font-size: 26px;
+            color: #333333;
+            float: left;
+          }
+          h6 {
+            color: #333333;
+            margin: 0 0 8px 54px;
+            font-size: 14px;
+            font-weight: 400;
+            color: rgba(51, 51, 51, 1);
+          }
+          p {
+            color: #333333;
+            margin: 0 0 6px 54px;
+            font-size: 12px;
+            font-weight: 400;
+            color: rgba(102, 102, 102, 1);
+            line-height: 16px;
+          }
+        }
+        .express {
+          margin-top: 20px;
+          p {
+            a {
+              color: #947465;
+            }
+          }
+        }
+      }
+      .price {
+        display: inline-block;
+        width: 100%;
+        margin: 10px auto;
+        padding: 20px 26px 30px;
+        background: #ffffff;
+        border-radius: 8px;
+        li {
+          width: 100%;
+          height: 30px;
+          font-size: 12px;
+          font-weight: 400;
+          color: rgba(102, 102, 102, 1);
+          span:nth-child(1) {
+            float: left;
+          }
+          span:nth-child(2) {
+            float: right;
+          }
+        }
+        li:nth-child(1) {
+          font-size: 14px;
+        }
+        .active {
+          span:nth-child(2) {
+            color: #947465;
+          }
+        }
+        .all {
+          border-top: 1px solid #dddddd;
+          padding-top: 6px;
+          height: 28px;
+          line-height: 24px;
+          span:nth-child(1) {
+            float: left;
+            font-size: 12px;
+            font-weight: 400;
+            color: rgba(102, 102, 102, 1);
+          }
+          span:nth-child(2) {
+            float: right;
+            font-size: 20px;
+            font-family: twCenMt;
+            color: rgba(242, 155, 135, 1);
+            em {
+              font-size: 12px;
+            }
+          }
+        }
+      }
+      .btn {
+        width: 100%;
+        margin-bottom: 50px;
+      }
+      .btn-white {
+        width: 100%;
+        height: 40px;
+        margin: 20px auto 0px;
+        background: rgba(250, 250, 250, 1);
+        border: 1px solid rgba(187, 187, 187, 1);
+        border-radius: 8px;
+        font-size: 14px;
+        line-height: 40px;
+        font-weight: 400;
+        color: rgba(51, 51, 51, 1);
+      }
+      .btn-block {
+        width: 345px;
+        height: 40px;
+        margin: 20px auto 0px;
+        background: rgba(51, 51, 51, 1);
+        border-radius: 8px;
+        font-size: 14px;
+        line-height: 40px;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 1);
+      }
+    }
+  }
+}
+.all::after{
+  display: block;
+  content: '.';
+  height: 0;
+  clear: both;
+  opacity: 0;
+  visibility: hidden;
+}
+.card-color{
+	color: #999;
+}
+</style>
